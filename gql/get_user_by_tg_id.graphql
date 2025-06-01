@@ -1,12 +1,15 @@
-query UserByTgIdQuery($tg_id: bigint = "") {
-  user:users_user(where: {tg_id: {_eq: $tg_id}}) {
-    created_at
+query GetUser($telegram_id: bigint = "") {
+  user:users_user(where: {telegram_id: {_eq: $telegram_id}}) {
+    telegram_id
+    aip_key_hash
     email
-    id
-    name
+    first_name
+    last_name
     password_hash
-    tg_id
+    username
+    created_at
     updated_at
+    id
     allowed_roles(order_by: {is_default: asc}) {
       created_at
       id

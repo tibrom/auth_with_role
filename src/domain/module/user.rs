@@ -7,21 +7,27 @@ pub struct ModuleUser {
     id: Uuid,
     created_at: DateTime<FixedOffset>,
     updated_at: DateTime<FixedOffset>,
-    name: String,
-    email: String,
-    tg_id: String,
-    password_hash: String,
+    username: String,
+    last_name: Option<String>,
+    first_name: Option<String>,
+    email: Option<String>,
+    telegram_id: Option<String>,
+    password_hash: Option<String>,
+    aip_key_hash: Option<String>,
 }
 
 #[derive(Debug, Clone, serde::Deserialize, serde::Serialize, PartialEq)]
-pub struct UserWithRole {
+pub struct ModuleUserWithRole {
     id: Uuid,
     created_at: DateTime<FixedOffset>,
     updated_at: DateTime<FixedOffset>,
-    name: String,
-    email: String,
-    tg_id: String,
-    password_hash: String,
+    username: String,
+    last_name: Option<String>,
+    first_name: Option<String>,
+    email: Option<String>,
+    telegram_id: Option<String>,
+    password_hash: Option<String>,
+    aip_key_hash: Option<String>,
     allowed_roles: Vec<AllowedRoles>
 }
 

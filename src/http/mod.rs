@@ -1,4 +1,4 @@
-pub mod gql;
+pub mod gql_builder;
 pub mod hasura;
 pub mod http;
 pub mod errors;

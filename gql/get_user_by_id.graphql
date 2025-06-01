@@ -1,12 +1,15 @@
-query UserByIdQuery($id: uuid = "") {
+query GetUser($id: uuid = "") {
   user:users_user(where: {id: {_eq: $id}}) {
-    created_at
+    telegram_id
+    aip_key_hash
     email
-    id
-    name
+    first_name
+    last_name
     password_hash
-    tg_id
+    username
+    created_at
     updated_at
+    id
     allowed_roles(order_by: {is_default: asc}) {
       created_at
       id

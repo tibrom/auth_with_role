@@ -1,12 +1,15 @@
-query UserByEmail($email: String = "") {
+query GetUser($email: String = "") {
   user:users_user(where: {email: {_eq: $email}}) {
-    updated_at
-    tg_id
-    password_hash
-    name
-    id
+    telegram_id
+    aip_key_hash
     email
+    first_name
+    last_name
+    password_hash
+    username
     created_at
+    updated_at
+    id
     allowed_roles(order_by: {is_default: asc}) {
       created_at
       id

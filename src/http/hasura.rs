@@ -5,7 +5,7 @@ use lazy_static::lazy_static;
 use include_dir::{include_dir, Dir};
 
 use super::http::HttpClient;
-use super::gql::GqlBuilder;
+use super::gql_builder::GqlBuilder;
 use super::query_loader::GraphQLDLoader;
 use super::errors::{HasuraClientError, HasuraErrorResponse};
 
@@ -13,9 +13,9 @@ use super::errors::{HasuraClientError, HasuraErrorResponse};
 const HOST: &str = "https://extrabot.ru";
 
 static GQL_DIR: Dir = include_dir!("$CARGO_MANIFEST_DIR/gql");
-const GET_USER_BY_EMAIL: &str = "get_user_by_email.graphql";
-const GET_USER_BY_ID: &str = "get_user_by_id.graphql";
-const GET_USER_BY_TG_ID: &str = "get_user_by_tg_id.graphql";
+pub const GET_USER_BY_EMAIL: &str = "get_user_by_email.graphql";
+pub const GET_USER_BY_ID: &str = "get_user_by_id.graphql";
+pub const GET_USER_BY_TG_ID: &str = "get_user_by_tg_id.graphql";
 
 
 lazy_static! {
@@ -29,6 +29,13 @@ lazy_static! {
     };
 }
 
+pub struct HasuraClientInterface;
+
+impl HasuraClientInterface {
+    pub fn get_hasura_client() -> HasuraClient {
+        HASURA_CLIENT.clone()
+    }
+}
 
 
 #[derive(Clone, Debug)]
@@ -209,7 +216,7 @@ mod tests {
         let gql_builder = result_gql_builder.unwrap();
 
         let query = gql_builder.clone().build();
-        
+
         let query_json: serde_json::Value = serde_json::from_str(&query)
             .expect("Expected valid JSON from gql_builder.build()");
 
