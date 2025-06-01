@@ -61,4 +61,5 @@ impl UserApi {
             .map_err(|e| DatabaseError::HasuraError(e))?;
         self.parse_module_user_with_role(value)
     }
+    
 }

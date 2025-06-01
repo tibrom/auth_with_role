@@ -1,0 +1,24 @@
+mutation InsertUser($telegram_id: bigint, $aip_key_hash: String, $email: String, $first_name: String, $last_name: String, $password_hash: String, $username: String) {
+  insert_users_user(objects: {telegram_id: $telegram_id, aip_key_hash: $aip_key_hash, email: $email, first_name: $first_name, last_name: $last_name, password_hash: $password_hash, username: $username}) {
+    affected_rows
+    returning {
+      telegram_id
+      aip_key_hash
+      email
+      first_name
+      last_name
+      password_hash
+      username
+      created_at
+      updated_at
+      id
+      allowed_roles {
+        created_at
+        id
+        is_default
+        role
+        user_id
+      }
+    }
+  }
+}
