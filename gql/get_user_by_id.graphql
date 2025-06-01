@@ -1,0 +1,18 @@
+query UserByIdQuery($id: uuid = "") {
+  user:users_user(where: {id: {_eq: $id}}) {
+    created_at
+    email
+    id
+    name
+    password_hash
+    tg_id
+    updated_at
+    allowed_roles(order_by: {is_default: asc}) {
+      created_at
+      id
+      is_default
+      role
+      user_id
+    }
+  }
+}

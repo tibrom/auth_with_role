@@ -1,0 +1,18 @@
+query UserByEmail($email: String = "") {
+  user:users_user(where: {email: {_eq: $email}}) {
+    updated_at
+    tg_id
+    password_hash
+    name
+    id
+    email
+    created_at
+    allowed_roles(order_by: {is_default: asc}) {
+      created_at
+      id
+      is_default
+      role
+      user_id
+    }
+  }
+}
