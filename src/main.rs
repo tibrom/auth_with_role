@@ -1,6 +1,6 @@
 mod domain;
 mod http;
-mod config;
+mod conf;
 
 fn main() {
     println!("Hello, world!");

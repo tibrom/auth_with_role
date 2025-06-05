@@ -8,6 +8,7 @@ use super::http::HttpClient;
 use super::gql::GqlBuilder;
 use super::query_loader::GraphQLDLoader;
 use super::errors::{HasuraClientError, HasuraErrorResponse};
+use crate::conf::conf::CredentialsGetter;
 
 
 const HOST: &str = "https://extrabot.ru";
@@ -21,7 +22,8 @@ const GET_USER_BY_TG_ID: &str = "get_user_by_tg_id.graphql";
 
 lazy_static! {
     static ref HASURA_CLIENT: HasuraClient = {
-        let gql_client = HasuraClientBuilder::new(HOST, GQL_DIR.clone())
+        let host = CredentialsGetter::get_credentials().unwrap().host;
+        let gql_client = HasuraClientBuilder::new(host.clone(), GQL_DIR.clone())
             .add_filename(GET_USER_BY_EMAIL)
             .add_filename(GET_USER_BY_ID)
             .add_filename(GET_USER_BY_TG_ID)
@@ -40,7 +42,7 @@ pub struct HasuraClient {
 }
 
 impl HasuraClient {
-    fn create_http_service(host: &'static str) -> HttpClient {
+    fn create_http_service(host: String) -> HttpClient {
         let hasura_url: String = host.to_string();
         let mut srv = HttpClient::new(hasura_url);
         //TODO реализовать авторизацию
@@ -52,12 +54,18 @@ impl HasuraClient {
         srv
     }
 
-    pub fn new(host: &'static str,) -> Self {
-        let http = Self::create_http_service(host);
+    pub fn new(hasura_url: String,) -> Self {
+        let mut srv = HttpClient::new(hasura_url);
+        //TODO реализовать авторизацию
+        //if let Some(key) = api_key {
+        //    let mut header_list: Vec<(String, String)> = Vec::new();
+        //    header_list.push(("X-Api-Key".to_string(), key));
+        //    srv.set_headers(header_list);
+        //}
         
         Self { 
             collection: HashMap::new(),
-            http
+            http: srv
         }
     }
 
@@ -130,7 +138,7 @@ pub struct HasuraClientBuilder<'a> {
 
 impl <'a>HasuraClientBuilder<'a> {
 
-    pub fn new(host: &'static str, gql_dir: Dir<'a>) -> Self {
+    pub fn new(host: String, gql_dir: Dir<'a>) -> Self {
         let gql_client = HasuraClient::new(host);
         Self { gql_client, filenames: Vec::new(), gql_dir}
     }
@@ -199,7 +207,7 @@ mod tests {
 
         let content = result.unwrap();
 
-        let mut builder = HasuraClientBuilder::new("http://localhost", TEST_GQL_DIR.clone());
+        let mut builder = HasuraClientBuilder::new("http://localhost".to_string(), TEST_GQL_DIR.clone());
         builder
             .add_filename(TEST_QUERY);
 
