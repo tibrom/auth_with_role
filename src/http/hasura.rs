@@ -18,6 +18,7 @@ const GET_USER_BY_ID: &str = "get_user_by_id.graphql";
 const GET_USER_BY_TG_ID: &str = "get_user_by_tg_id.graphql";
 
 
+
 lazy_static! {
     static ref HASURA_CLIENT: HasuraClient = {
         let gql_client = HasuraClientBuilder::new(HOST, GQL_DIR.clone())
@@ -62,6 +63,7 @@ impl HasuraClient {
 
     pub fn add_query(&mut self, operation_name: impl ToString, query: impl ToString) {
         self.collection.insert(operation_name.to_string(), GqlBuilder::new(operation_name.to_string(), query.to_string()));
+        
     }
 
     fn map_gql_error(result: Result<String, reqwest::Error>) -> Result<Value, HasuraClientError> {
@@ -79,6 +81,8 @@ impl HasuraClient {
 
         Ok(value)
     }
+
+
 
     pub async fn execute(&self, operation_name: impl ToString, variables: Value) -> Result<Value, HasuraClientError> {
         let operation_name = operation_name.to_string();
