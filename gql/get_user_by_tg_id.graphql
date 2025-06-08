@@ -4,7 +4,6 @@ query UserByTgIdQuery($tg_id: bigint = "") {
     email
     id
     name
-    password_hash
     tg_id
     updated_at
     allowed_roles(order_by: {is_default: asc}) {

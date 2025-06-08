@@ -1,6 +1,5 @@
-
-use super::http::HttpClient;
 use super::errors::{HasuraClientError, HasuraErrorResponse};
+use super::http::HttpClient;
 use serde_json::{json, Value};
 use std::{collections::HashMap, result, sync::Arc};
 
@@ -37,4 +36,3 @@ impl GqlBuilder {
         request
     }
 }
-

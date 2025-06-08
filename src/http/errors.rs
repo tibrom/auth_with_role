@@ -18,7 +18,6 @@ pub enum HasuraClientError {
 
     #[error("GqlBuilder not found by name: {0}")]
     GqlBuilderNotFound(String),
-
 }
 
 /// Ошибка Hasura (десериализуется из тела ответа)

@@ -4,7 +4,6 @@ query UserByIdQuery($id: uuid = "") {
     email
     id
     name
-    password_hash
     tg_id
     updated_at
     allowed_roles(order_by: {is_default: asc}) {

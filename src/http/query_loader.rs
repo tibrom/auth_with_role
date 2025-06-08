@@ -7,7 +7,7 @@ pub struct GraphQLDLoader<'a> {
 
 impl<'a> GraphQLDLoader<'a> {
     /// Создаёт загрузчик GraphQL-запросов из включённой директории
-    /// 
+    ///
     pub fn new(dir: &'a Dir<'a>) -> Self {
         Self { dir }
     }
@@ -16,21 +16,27 @@ impl<'a> GraphQLDLoader<'a> {
     pub fn read_query(&self, filename: &str) -> io::Result<String> {
         // Проверка расширения
         if !filename.ends_with(".graphql") {
-            return Err(Error::new(ErrorKind::InvalidInput, "Filename must end with .graphql"));
+            return Err(Error::new(
+                ErrorKind::InvalidInput,
+                "Filename must end with .graphql",
+            ));
         }
 
         // Ищем файл по имени
         match self.dir.get_file(filename) {
             Some(file) => {
-                let content = file.contents_utf8()
+                let content = file
+                    .contents_utf8()
                     .ok_or_else(|| Error::new(ErrorKind::InvalidData, "Invalid UTF-8 in file"))?;
                 Ok(content.to_string())
             }
-            None => Err(Error::new(ErrorKind::NotFound, format!("File '{}' not found", filename))),
+            None => Err(Error::new(
+                ErrorKind::NotFound,
+                format!("File '{}' not found", filename),
+            )),
         }
     }
 }
-
 
 #[cfg(test)]
 mod tests {

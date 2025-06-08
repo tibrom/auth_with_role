@@ -1,6 +1,6 @@
 use chrono::{DateTime, FixedOffset};
+use getset::{Getters, Setters};
 use uuid::Uuid;
-
 
 #[derive(Debug, Clone, serde::Deserialize, serde::Serialize, PartialEq)]
 pub struct ModuleUser {
@@ -13,28 +13,32 @@ pub struct ModuleUser {
     password_hash: String,
 }
 
-#[derive(Debug, Clone, serde::Deserialize, serde::Serialize, PartialEq)]
+#[derive(Getters, Setters, Debug, Clone, serde::Deserialize, serde::Serialize, PartialEq)]
 pub struct UserWithRole {
+    #[get = "pub"]
     id: Uuid,
     created_at: DateTime<FixedOffset>,
     updated_at: DateTime<FixedOffset>,
     name: String,
     email: String,
     tg_id: String,
-    password_hash: String,
-    allowed_roles: Vec<AllowedRoles>
+    #[get = "pub"]
+    allowed_roles: Vec<AllowedRoles>,
 }
 
-#[derive(Debug, Clone, serde::Deserialize, serde::Serialize, PartialEq)]
-pub struct AllowedRoles{
+#[derive(Getters, Setters, Debug, Clone, serde::Deserialize, serde::Serialize, PartialEq)]
+pub struct AllowedRoles {
+    #[get = "pub"]
     id: Uuid,
+    #[get = "pub"]
     role: String,
+    #[get = "pub"]
     is_default: bool,
     created_at: DateTime<FixedOffset>,
-    user_id: Uuid
+    user_id: Uuid,
 }
 
 #[derive(Debug, Clone, serde::Deserialize, serde::Serialize, PartialEq)]
-pub struct Role{
+pub struct Role {
     value: String,
 }

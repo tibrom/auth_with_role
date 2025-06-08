@@ -2,7 +2,6 @@ query UserByEmail($email: String = "") {
   user:users_user(where: {email: {_eq: $email}}) {
     updated_at
     tg_id
-    password_hash
     name
     id
     email

@@ -68,7 +68,15 @@ impl HttpClient {
         let elapsed = SystemTime::now();
         loop {
             let trace_id = Uuid::new_v4().to_string();
-            match Self::request_inner(method.clone(), uri, body.clone(), headers.clone(), Some(trace_id.clone())).await {
+            match Self::request_inner(
+                method.clone(),
+                uri,
+                body.clone(),
+                headers.clone(),
+                Some(trace_id.clone()),
+            )
+            .await
+            {
                 Ok(response) => {
                     //info!("Resolved traceId: {} duration: {}ms",trace_id,elapsed.elapsed().unwrap().as_millis());
                     break Ok(response);
@@ -92,7 +100,13 @@ impl HttpClient {
     }
 
     pub async fn post(self, body: String) -> Result<String, reqwest::Error> {
-        let resp = Self::request(Method::POST, self.uri.clone().as_str(), Some(body.clone()), self.headers.clone()).await?;
+        let resp = Self::request(
+            Method::POST,
+            self.uri.clone().as_str(),
+            Some(body.clone()),
+            self.headers.clone(),
+        )
+        .await?;
         let body_bytes = resp.bytes().await?;
         let body = String::from_utf8(body_bytes.to_vec()).unwrap();
         Ok(body)

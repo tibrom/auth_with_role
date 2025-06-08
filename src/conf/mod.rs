@@ -1,2 +1,2 @@
-pub mod conf;
+pub mod credentials;
 pub mod errors;
