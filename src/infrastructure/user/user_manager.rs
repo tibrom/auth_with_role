@@ -1,6 +1,6 @@
 use std::clone;
 
-use crate::domain::user::{model::{AllowedRoles, UserWithRole, UserNameEmailPasswordHash}, service::RemoteUserService};
+use crate::domain::user::{model::{AllowedRole, UserWithRole, UserNameEmailPasswordHash}, service::RemoteUserService};
 
 use super::hasura::client_manager::{
     HasuraClientManager, GET_USER_BY_EMAIL, GET_USER_BY_ID, GET_USER_BY_TG_ID, CREATE_USER, CREATE_ALLOWED_ROLES};
@@ -26,7 +26,7 @@ pub struct HasuraCreatedRoles {
 
 #[derive(Debug, Clone, serde::Deserialize, serde::Serialize, PartialEq)]
 pub struct HasuraAllowedRoles {
-    pub roles: Vec<AllowedRoles>,
+    pub roles: Vec<AllowedRole>,
 }
 
 pub struct UserManager;
@@ -102,7 +102,7 @@ impl RemoteUserService for UserManager {
         }
     }
 
-    async fn add_role(&self, allowed_roles: AllowedRoles) -> Result<UserWithRole, Self::Error> {
+    async fn add_role(&self, allowed_roles: AllowedRole) -> Result<UserWithRole, Self::Error> {
         let client = HasuraClientManager::get_hasura_client()
             .await.map_err(|e| UserManagerError::HasuraClientError(e))?;
         let variables = serde_json::json!(

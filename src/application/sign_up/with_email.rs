@@ -1,7 +1,7 @@
 use super::dto::{SignUpRequestDto, SignUpResponseDto};
 use crate::application::auth::dto::TokenPairDto;
 use crate::application::sign_up::dto::UserDataPairDto;
-use crate::domain::user::model::{AllowedRoles, UserNameEmailPasswordHash};
+use crate::domain::user::model::{AllowedRole, UserNameEmailPasswordHash};
 use crate::domain::verifies::service::PasswordVerifierService;
 use crate::domain::settings::service::CredentialsService;
 use crate::domain::user::service::RemoteUserService;
@@ -47,7 +47,7 @@ where
             .map(|v| v.new_user_role().clone())
             .map_err(|e| format!("Credentials not allowed"))?;
 
-        let allowed_roles = AllowedRoles::new_default(&default_role, new_user.id());
+        let allowed_roles = AllowedRole::new_default(&default_role, new_user.id());
 
         match self.user_provider.add_role(allowed_roles).await {
             Ok(u) => {

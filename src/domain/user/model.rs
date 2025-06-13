@@ -46,11 +46,11 @@ pub struct UserWithRole {
     #[get = "pub"]
     password_hash: Option<String>,
     #[get = "pub"]
-    allowed_roles: Vec<AllowedRoles>,
+    allowed_roles: Vec<AllowedRole>,
 }
 
 #[derive(Getters, Setters, Debug, Clone, serde::Deserialize, serde::Serialize, PartialEq)]
-pub struct AllowedRoles {
+pub struct AllowedRole {
     #[get = "pub"]
     id: Option<Uuid>,
     #[get = "pub"]
@@ -62,7 +62,7 @@ pub struct AllowedRoles {
     user_id: Uuid,
 }
 
-impl AllowedRoles {
+impl AllowedRole {
     pub fn new_default(role: &str, user_id: &Uuid) -> Self {
         Self { 
             id: None,
