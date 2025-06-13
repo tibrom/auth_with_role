@@ -1,0 +1,27 @@
+### Добавить предзапись
+POST http://127.0.0.1:8081/auth/login HTTP/1.1
+content-type: application/json
+
+{
+    "email": "gorlans@mail.ru",
+    "password": "12345678"
+}
+###
+
+POST http://127.0.0.1:8081/signup HTTP/1.1
+content-type: application/json
+
+{
+    "username": "Andrei",
+    "email": "gorlans@mail.ru",
+    "password": "12345678"
+}
+###
+
+POST http://127.0.0.1:8081/empty HTTP/1.1
+content-type: application/json
+
+{
+    "email": "user@example.com",
+    "password": "securepassword"
+}

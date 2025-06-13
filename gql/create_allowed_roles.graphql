@@ -1,0 +1,11 @@
+mutation create_allowed_roles ($role: String, $user_id: uuid, $is_default: Boolean) {
+  new:insert_users_allowed_roles(objects: {role: $role, user_id: $user_id, is_default: $is_default}) {
+    roles:returning {
+      is_default
+      role
+      created_at
+      id
+      user_id
+    }
+  }
+}
