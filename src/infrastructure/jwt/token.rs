@@ -1,7 +1,7 @@
 use jsonwebtoken::{decode, encode, Algorithm, DecodingKey, EncodingKey, Header, Validation};
 
 use super::config::credentials_provider::CredentialsProvider;
-use crate::domain::jwt::model::{Claims, HasuraClaims, RefreshClaims};
+use crate::domain::jwt::model::{Claims, RefreshClaims};
 use crate::domain::jwt::service::TokenService;
 use crate::domain::settings::service::CredentialsService as _;
 

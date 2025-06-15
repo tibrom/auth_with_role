@@ -1,6 +1,6 @@
-use crate::application::auth::dto::{CreateApiKeyRequestDto, CreateApiKeyResponseDto};
+use crate::application::auth::dto::CreateApiKeyRequestDto;
 use crate::application::auth::dto::{
-    LoginApiKeyRequestDto, LoginEmailPasRequestDto, LoginEmailPasResponseDto,
+    LoginApiKeyRequestDto, LoginEmailPasRequestDto,
 };
 use crate::interface::web::state::AppState;
 use actix_web::{post, web, HttpResponse, Responder};

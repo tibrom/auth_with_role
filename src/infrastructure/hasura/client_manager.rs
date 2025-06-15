@@ -1,14 +1,10 @@
-use std::collections::HashMap;
 
 use include_dir::{include_dir, Dir};
 use lazy_static::lazy_static;
-use serde_json::Value;
 use tokio::sync::RwLock;
 
 use super::config::credentials_provider::CredentialsProvider;
-use super::errors::{HasuraClientError, HasuraErrorResponse};
-use super::gql_builder::GqlBuilder;
-use super::http_client::HttpClient;
+use super::errors::HasuraClientError;
 use super::query_loader::GraphQLDLoader;
 use crate::domain::settings::service::CredentialsService as _;
 use crate::infrastructure::hasura::client::HasuraClient;

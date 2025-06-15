@@ -2,7 +2,6 @@ use super::dto::{
     CreateApiKeyRequestDto, CreateApiKeyResponseDto, LoginApiKeyRequestDto, LoginApiKeyResponseDto,
 };
 use super::ServiceErrorExt;
-use crate::application::auth::dto::TokenPairDto;
 use crate::domain::errors::service::{AppErrorInfo, ErrorLevel};
 use crate::domain::jwt::service::{JwtClaimsService, TokenService};
 use crate::domain::settings::service::CredentialsService;

@@ -1,4 +1,3 @@
-use serde_json::value;
 
 use crate::domain::jwt::model::{Claims, HasuraClaims, RefreshClaims};
 use crate::domain::jwt::service::JwtClaimsService;

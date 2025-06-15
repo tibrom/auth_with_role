@@ -1,5 +1,4 @@
-use actix_web::http;
-use serde_json::{json, Value};
+use serde_json::Value;
 use std::collections::HashMap;
 
 use crate::domain::jwt::service::{JwtClaimsService as _, TokenService};

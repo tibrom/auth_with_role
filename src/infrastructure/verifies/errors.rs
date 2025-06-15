@@ -1,6 +1,5 @@
 use crate::domain::errors::service::AppErrorInfo;
 use crate::domain::errors::service::ErrorLevel;
-use std::fmt;
 use thiserror::Error;
 
 /// Основная ошибка GraphQL клиента (обёртка)

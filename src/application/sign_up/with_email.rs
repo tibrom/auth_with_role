@@ -1,11 +1,10 @@
 use super::dto::{SignUpRequestDto, SignUpResponseDto};
 use super::ServiceErrorExt;
-use crate::application::auth::dto::TokenPairDto;
 use crate::application::sign_up::dto::UserDataPairDto;
 use crate::domain::errors::service::{AppErrorInfo, ErrorLevel};
 use crate::domain::settings::service::CredentialsService;
 use crate::domain::user::model::{AllowedRoles, UserNameEmailPasswordHash};
-use crate::domain::user::service::{CommandUserService, QueryUserService};
+use crate::domain::user::service::CommandUserService;
 use crate::domain::verifies::service::PasswordVerifierService;
 
 pub struct SignUpWithEmailUseCase<U, V, C> {

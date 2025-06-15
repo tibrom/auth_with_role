@@ -4,9 +4,8 @@ use crate::domain::verifies::service::ApiKeyVerifierService;
 use aes_gcm::aead::{Aead, KeyInit};
 use aes_gcm::{Aes256Gcm, Key, Nonce}; // AES-GCM symmetric encryption
 use base64::{engine::general_purpose, Engine as _};
-use rand::{rngs::OsRng, RngCore, TryRngCore};
+use rand::{rngs::OsRng, TryRngCore};
 use sha2::{Digest, Sha256};
-use std::fmt::Display;
 use uuid::Uuid;
 
 const CHARSET: &[u8] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";

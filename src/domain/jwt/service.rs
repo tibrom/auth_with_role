@@ -1,5 +1,5 @@
 use super::model::{Claims, RefreshClaims};
-use crate::domain::errors::service::{AppErrorInfo, ErrorLevel};
+use crate::domain::errors::service::AppErrorInfo;
 
 use super::UserWithRole;
 

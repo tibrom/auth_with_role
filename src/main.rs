@@ -17,7 +17,6 @@ use crate::infrastructure::verifies::password_verifier::PasswordVerifier;
 use actix_web::{web, App, HttpServer};
 use interface::web::routes::auth::createapikey;
 use interface::web::routes::auth::{login, loginapikey};
-use interface::web::routes::empty::empty;
 use interface::web::routes::sign_up::signup;
 use interface::web::state::AppState;
 use std::sync::Arc;

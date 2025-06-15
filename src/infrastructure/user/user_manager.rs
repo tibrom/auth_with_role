@@ -1,10 +1,8 @@
-use std::clone;
 
 use crate::domain::user::model::{AllowedRoles, UserNameEmailPasswordHash, UserWithRole};
 use crate::domain::user::service::{CommandUserService, QueryUserService};
 
 use super::errors::UserManagerError;
-use super::hasura::client::HasuraClient;
 use super::hasura::client_manager::{
     HasuraClientManager, CREATE_ALLOWED_ROLES, CREATE_USER, GET_USER_BY_EMAIL, GET_USER_BY_ID,
     GET_USER_BY_TG_ID, UPDATE_API_KEY_USER,
