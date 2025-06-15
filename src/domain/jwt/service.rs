@@ -1,9 +1,10 @@
 use super::model::{Claims, RefreshClaims};
+use crate::domain::errors::service::{AppErrorInfo, ErrorLevel};
 
 use super::UserWithRole;
 
 pub trait JwtClaimsService {
-    type Error;
+    type Error: AppErrorInfo;
 
     fn access_claims(&self, user: &UserWithRole) -> Result<Claims, Self::Error>;
     fn refresh_claims(&self, user: &UserWithRole) -> Result<RefreshClaims, Self::Error>;
@@ -11,7 +12,7 @@ pub trait JwtClaimsService {
 }
 
 pub trait TokenService: Send + Sync {
-    type Error;
+    type Error: AppErrorInfo;
 
     fn generate_access(&self, claims: Claims) -> Result<String, Self::Error>;
     fn generate_refresh(&self, claims: RefreshClaims) -> Result<String, Self::Error>;

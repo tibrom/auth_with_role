@@ -24,7 +24,7 @@ impl ApiKeyVerifier {
         
         let hash = Sha256::digest(key.as_bytes());
 
-        
+        // Преобразуем результат в массив [u8; 32]
         let mut encryption_key = [0u8; 32];
         encryption_key.copy_from_slice(&hash[..]);
 
@@ -92,23 +92,27 @@ impl ApiKeyVerifierService for ApiKeyVerifier {
     fn generate(&self, length: u16, user_id: Uuid) -> String {
         let encrypted_uuid = self.encrypt_uuid(user_id).expect("UUID encryption failed");
 
-        let mut key = encrypted_uuid;
-        let min_len = length.max(API_KEY_MIN_LEN as u16) as usize;
+        let random_len = length as usize;
+        let mut random_part = String::new();
 
-        while key.len() < min_len {
+        while random_part.len() < random_len {
             let mut buffer = [0u8; 16];
             OsRng.try_fill_bytes(&mut buffer).unwrap();
-            key.push_str(&self.bytes_to_base62(buffer.to_vec()));
+            random_part.push_str(&self.bytes_to_base62(buffer.to_vec()));
         }
 
-        key.truncate(min_len);
-        key
+        random_part.truncate(random_len);
+
+        format!("{}-{}", encrypted_uuid, random_part)
     }
 
     fn extract_user_id(&self, api_key: &str) -> Result<Uuid, Self::Error> {
-        let candidate = &api_key[..ENCRYPTED_UUID_LEN_ESTIMATE.min(api_key.len())];
-        self.decrypt_uuid(candidate)
+        let encrypted_part = api_key.split('-').next()
+            .ok_or_else(|| ApiKeyVerifierError::DecryptionError("Token format invalid".to_string()))?;
+        
+        self.decrypt_uuid(encrypted_part)
     }
+
 
     fn is_verified(&self, api_key_hash: &str, api_key: &str) -> Result<bool, Self::Error> {
         bcrypt::verify(api_key, api_key_hash)
@@ -125,4 +129,19 @@ impl ApiKeyVerifierService for ApiKeyVerifier {
                 source: e,
             })
     }
+}
+
+
+#[test]
+fn test_api_key_cycle() {
+    let verifier = ApiKeyVerifier::new("same-key");
+
+    let user_id = Uuid::new_v4();
+    let api_key = verifier.generate(8, user_id);
+
+    println!("Generated API key: {}", api_key);
+
+    let extracted = verifier.extract_user_id(&api_key).unwrap();
+
+    assert_eq!(extracted, user_id);
 }

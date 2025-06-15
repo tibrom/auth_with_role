@@ -3,7 +3,6 @@ use crate::application::auth::dto::TokenPairDto;
 use crate::domain::verifies::service::PasswordVerifierService;
 use crate::domain::jwt::service::{TokenService, JwtClaimsService};
 use crate::domain::user::service::QueryUserService;
-use crate::domain::error::service::ErrorService;
 
 const WRONG_CREDENTIALS: &str = "Incorrect login or password";
 const INTERNAL_ERROR_SERVER: &str = "Internal error";

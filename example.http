@@ -32,7 +32,7 @@ POST http://127.0.0.1:8081/auth/loginapikey HTTP/1.1
 content-type: application/json
 
 {
-    "api_key": "Go/7rYCGbdci61fRV8XnUJz55Ev4yar/HvfRPKP5gtyckexNODyj2bTIGj4HfBS9"
+    "api_key": "xVB9oWQziifvVTD8z/Q3PGrdna50ckhe4Xpfun/CjVf64qQ8Kpp7sbsaEVQ-FR0gcsYFFR9hijzUgebcDWCnavIDjczHunyeyFfCvlzMGqrPZb8AsQbiYs58BMzs"
 }
 ###
 

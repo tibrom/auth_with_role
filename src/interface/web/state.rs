@@ -8,7 +8,6 @@ use crate::infrastructure::jwt::token::TokenProvider;
 use crate::infrastructure::config::credentials_provider::CredentialsProvider;
 use crate::infrastructure::verifies::password_verifier::PasswordVerifier;
 use crate::infrastructure::verifies::api_key_verifier::ApiKeyVerifier;
-use crate::infrastructure::error_handler::handler::ErrorHandler;
 
 
 type LoginUseCaseConcrete = LoginWithEmailUseCase<
@@ -29,8 +28,7 @@ type LoginApiKeyUseCaseConcrete = LoginApiKeyUseCase<
     ApiKeyVerifier,
     CredentialsProvider,
     ClaimsProvider,
-    TokenProvider,
-    ErrorHandler
+    TokenProvider
 >;
 
 type CreateApiKeyUseCaseConcrete = CreateApiKeyUseCase<
