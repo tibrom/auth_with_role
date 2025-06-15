@@ -17,5 +17,8 @@ pub enum UserManagerError {
     FailedCreateUser,
 
     #[error("Failed create allowed roles")]
-    FailedCreateAllowedRoles
+    FailedCreateAllowedRoles,
+
+    #[error("Failed create allowed roles")]
+    FailedUpdateApiKey
 }

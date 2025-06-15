@@ -2,7 +2,8 @@ use super::dto::{LoginEmailPasRequestDto, LoginEmailPasResponseDto};
 use crate::application::auth::dto::TokenPairDto;
 use crate::domain::verifies::service::PasswordVerifierService;
 use crate::domain::jwt::service::{TokenService, JwtClaimsService};
-use crate::domain::user::service::RemoteUserService;
+use crate::domain::user::service::QueryUserService;
+use crate::domain::error::service::ErrorService;
 
 const WRONG_CREDENTIALS: &str = "Incorrect login or password";
 const INTERNAL_ERROR_SERVER: &str = "Internal error";
@@ -20,7 +21,7 @@ where
     V: PasswordVerifierService,
     T: TokenService,
     C: JwtClaimsService,
-    U: RemoteUserService, {
+    U: QueryUserService, {
 
     pub fn new(user_provider: U, verifier: V, claims_provider: C, token_provider: T) -> Self {
         Self {

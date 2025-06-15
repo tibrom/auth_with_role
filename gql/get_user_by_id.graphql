@@ -7,6 +7,7 @@ query get_user_by_id($id: uuid = "") {
     email
     created_at
     password_hash
+    aip_key_hash
     allowed_roles(order_by: {is_default: asc}) {
       created_at
       id

@@ -1,5 +1,5 @@
-mutation create_user($password_hash: String, $username: String, $email: String) {
-  new:insert_users_user(objects: {password_hash: $password_hash, aip_key_hash: null, telegram_id: null, username: $username, first_name: null, last_name: null, email: $email}) {
+mutation update_api_key_user($user_id: uuid, $aip_key_hash: String = "") {
+  new: update_users_user(_set: {aip_key_hash: $aip_key_hash}, where: {id: {_eq: $user_id}}) {
     user:returning {
       updated_at
     telegram_id
@@ -19,4 +19,3 @@ mutation create_user($password_hash: String, $username: String, $email: String) 
     }
   }
 }
-

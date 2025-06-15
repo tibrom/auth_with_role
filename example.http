@@ -13,8 +13,26 @@ content-type: application/json
 
 {
     "username": "Andrei",
+    "email": "gorlans1@mail.ru",
+    "password": "12345678"
+}
+###
+
+POST http://127.0.0.1:8081/createapikey HTTP/1.1
+content-type: application/json
+
+{
     "email": "gorlans@mail.ru",
     "password": "12345678"
+}
+###
+
+
+POST http://127.0.0.1:8081/auth/loginapikey HTTP/1.1
+content-type: application/json
+
+{
+    "api_key": "Go/7rYCGbdci61fRV8XnUJz55Ev4yar/HvfRPKP5gtyckexNODyj2bTIGj4HfBS9"
 }
 ###
 

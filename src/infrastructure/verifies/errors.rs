@@ -12,3 +12,18 @@ pub enum PasswordVerifierError {
     },
 
 }
+/// Основная ошибка GraphQL клиента (обёртка)
+#[derive(Debug, Error)]
+pub enum ApiKeyVerifierError {
+    #[error("Config error (stage = {stage}): {source}")]
+    HashPasswordCryptError {
+        stage: &'static str,
+        #[source]
+        source: bcrypt::BcryptError,
+    },
+    #[error("Decryption Error")]
+    DecryptionError(String),
+    #[error("Encryption Error")]
+    EncryptionError(String)
+
+}

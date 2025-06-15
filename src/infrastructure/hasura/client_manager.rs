@@ -20,16 +20,18 @@ pub const GET_USER_BY_ID: &str = "get_user_by_id";
 pub const GET_USER_BY_TG_ID: &str = "get_user_by_tg_id";
 pub const CREATE_USER: &str = "create_user";
 pub const CREATE_ALLOWED_ROLES: &str = "create_allowed_roles";
+pub const UPDATE_API_KEY_USER: &str = "update_api_key_user";
 
 
 static GQL_DIR: Dir = include_dir!("$CARGO_MANIFEST_DIR/gql");
 
-const GQL_FILES: [&str; 5] = [
+const GQL_FILES: [&str; 6] = [
     GET_USER_BY_EMAIL,
     GET_USER_BY_ID,
     GET_USER_BY_TG_ID,
     CREATE_USER,
-    CREATE_ALLOWED_ROLES
+    CREATE_ALLOWED_ROLES,
+    UPDATE_API_KEY_USER
 ];
 
 lazy_static! {

@@ -25,3 +25,6 @@ lazy_static = "1.5.0"
 confi = "0.1.4"
 config = "0.15.11"
 getset = "0.1.5"
+rand = { version = "0.9.1", features = ["std"] }
+aes-gcm = "0.10.3"
+base64 = "0.22.1"
