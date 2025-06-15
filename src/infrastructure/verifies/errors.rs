@@ -1,7 +1,7 @@
-use std::fmt;
-use thiserror::Error;
 use crate::domain::errors::service::AppErrorInfo;
 use crate::domain::errors::service::ErrorLevel;
+use std::fmt;
+use thiserror::Error;
 
 /// Основная ошибка GraphQL клиента (обёртка)
 #[derive(Debug, Error)]
@@ -12,7 +12,6 @@ pub enum PasswordVerifierError {
         #[source]
         source: bcrypt::BcryptError,
     },
-
 }
 
 impl AppErrorInfo for PasswordVerifierError {
@@ -27,14 +26,12 @@ impl AppErrorInfo for PasswordVerifierError {
             PasswordVerifierError::HashPasswordCryptError { stage, source } => {
                 format!(
                     "PasswordVerifierError::HashPasswordCryptError at stage '{}': {}",
-                    stage,
-                    source
+                    stage, source
                 )
             }
         }
     }
 }
-
 
 /// Основная ошибка GraphQL клиента (обёртка)
 #[derive(Debug, Error)]
@@ -48,8 +45,7 @@ pub enum ApiKeyVerifierError {
     #[error("Decryption Error")]
     DecryptionError(String),
     #[error("Encryption Error")]
-    EncryptionError(String)
-
+    EncryptionError(String),
 }
 
 impl AppErrorInfo for ApiKeyVerifierError {
@@ -64,8 +60,7 @@ impl AppErrorInfo for ApiKeyVerifierError {
             ApiKeyVerifierError::HashPasswordCryptError { stage, source } => {
                 format!(
                     "ApiKeyVerifierError::HashPasswordCryptError at stage '{}': {}",
-                    stage,
-                    source
+                    stage, source
                 )
             }
             ApiKeyVerifierError::DecryptionError(msg) => {

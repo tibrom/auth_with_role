@@ -4,5 +4,4 @@ pub trait CredentialsService {
     type Error: AppErrorInfo;
 
     fn get_credentials(&self) -> Result<Credentials, Self::Error>;
-
 }

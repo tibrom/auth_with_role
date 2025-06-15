@@ -1,6 +1,5 @@
 pub mod claims;
-pub mod token;
 pub mod error;
-
+pub mod token;
 
 use super::config;

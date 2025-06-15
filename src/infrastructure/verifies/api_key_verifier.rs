@@ -1,13 +1,13 @@
-use crate::domain::verifies::service::ApiKeyVerifierService;
 use super::errors::ApiKeyVerifierError;
+use crate::domain::verifies::service::ApiKeyVerifierService;
 
+use aes_gcm::aead::{Aead, KeyInit};
+use aes_gcm::{Aes256Gcm, Key, Nonce}; // AES-GCM symmetric encryption
+use base64::{engine::general_purpose, Engine as _};
 use rand::{rngs::OsRng, RngCore, TryRngCore};
 use sha2::{Digest, Sha256};
-use uuid::Uuid;
-use aes_gcm::{Aes256Gcm, Key, Nonce}; // AES-GCM symmetric encryption
-use aes_gcm::aead::{Aead, KeyInit};
-use base64::{engine::general_purpose, Engine as _};
 use std::fmt::Display;
+use uuid::Uuid;
 
 const CHARSET: &[u8] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
 const BASE: usize = 62;
@@ -21,7 +21,6 @@ pub struct ApiKeyVerifier {
 
 impl ApiKeyVerifier {
     pub fn new(key: &str) -> Self {
-        
         let hash = Sha256::digest(key.as_bytes());
 
         // Преобразуем результат в массив [u8; 32]
@@ -30,7 +29,7 @@ impl ApiKeyVerifier {
 
         Self { encryption_key }
     }
-    
+
     fn bytes_to_base62(&self, mut bytes: Vec<u8>) -> String {
         let mut num = 0u128;
         for byte in bytes.drain(..) {
@@ -54,8 +53,9 @@ impl ApiKeyVerifier {
         let mut nonce_bytes = [0u8; NONCE_LEN];
         OsRng.try_fill_bytes(&mut nonce_bytes);
         let nonce = Nonce::from_slice(&nonce_bytes);
-        
-        let ciphertext = cipher.encrypt(nonce, uuid.as_bytes().as_ref())
+
+        let ciphertext = cipher
+            .encrypt(nonce, uuid.as_bytes().as_ref())
             .map_err(|e| ApiKeyVerifierError::EncryptionError(e.to_string()))?;
 
         let mut data = nonce_bytes.to_vec();
@@ -70,7 +70,9 @@ impl ApiKeyVerifier {
             .map_err(|e| ApiKeyVerifierError::DecryptionError(e.to_string()))?;
 
         if data.len() < NONCE_LEN {
-            return Err(ApiKeyVerifierError::DecryptionError("Invalid token format".into()));
+            return Err(ApiKeyVerifierError::DecryptionError(
+                "Invalid token format".into(),
+            ));
         }
 
         let (nonce_bytes, ciphertext) = data.split_at(NONCE_LEN);
@@ -78,7 +80,8 @@ impl ApiKeyVerifier {
         let cipher = Aes256Gcm::new(key);
         let nonce = Nonce::from_slice(nonce_bytes);
 
-        let decrypted = cipher.decrypt(nonce, ciphertext)
+        let decrypted = cipher
+            .decrypt(nonce, ciphertext)
             .map_err(|e| ApiKeyVerifierError::DecryptionError(e.to_string()))?;
 
         Uuid::from_slice(&decrypted)
@@ -107,30 +110,31 @@ impl ApiKeyVerifierService for ApiKeyVerifier {
     }
 
     fn extract_user_id(&self, api_key: &str) -> Result<Uuid, Self::Error> {
-        let encrypted_part = api_key.split('-').next()
-            .ok_or_else(|| ApiKeyVerifierError::DecryptionError("Token format invalid".to_string()))?;
-        
+        let encrypted_part = api_key.split('-').next().ok_or_else(|| {
+            ApiKeyVerifierError::DecryptionError("Token format invalid".to_string())
+        })?;
+
         self.decrypt_uuid(encrypted_part)
     }
 
-
     fn is_verified(&self, api_key_hash: &str, api_key: &str) -> Result<bool, Self::Error> {
-        bcrypt::verify(api_key, api_key_hash)
-            .map_err(|e| ApiKeyVerifierError::HashPasswordCryptError {
+        bcrypt::verify(api_key, api_key_hash).map_err(|e| {
+            ApiKeyVerifierError::HashPasswordCryptError {
                 stage: "bcrypt::verify",
                 source: e,
-            })
+            }
+        })
     }
 
     fn create_hash(&self, api_key: &str) -> Result<String, Self::Error> {
-        bcrypt::hash(api_key, bcrypt::DEFAULT_COST)
-            .map_err(|e| ApiKeyVerifierError::HashPasswordCryptError {
+        bcrypt::hash(api_key, bcrypt::DEFAULT_COST).map_err(|e| {
+            ApiKeyVerifierError::HashPasswordCryptError {
                 stage: "bcrypt::hash",
                 source: e,
-            })
+            }
+        })
     }
 }
-
 
 #[test]
 fn test_api_key_cycle() {

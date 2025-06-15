@@ -1,6 +1,6 @@
-use actix_web::{post, web, HttpResponse, Responder};
-use crate::interface::web::state::AppState;
 use crate::application::sign_up::dto::{SignUpRequestDto, SignUpResponseDto};
+use crate::interface::web::state::AppState;
+use actix_web::{post, web, HttpResponse, Responder};
 
 #[post("/signup")]
 pub async fn signup(
@@ -11,9 +11,7 @@ pub async fn signup(
     let result = data.sign_up_use_case.clone().sign_up(dto).await;
 
     match result {
-        Ok(v) => {
-            HttpResponse::Ok().json(v)
-        }
+        Ok(v) => HttpResponse::Ok().json(v),
         Err(_) => HttpResponse::InternalServerError().json(serde_json::json!({
             "error": "Internal error"
         })),

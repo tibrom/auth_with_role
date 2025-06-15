@@ -8,7 +8,7 @@ pub trait JwtClaimsService {
 
     fn access_claims(&self, user: &UserWithRole) -> Result<Claims, Self::Error>;
     fn refresh_claims(&self, user: &UserWithRole) -> Result<RefreshClaims, Self::Error>;
-    fn inner_access_claims(&self, ) -> Result<Claims, Self::Error>;
+    fn inner_access_claims(&self) -> Result<Claims, Self::Error>;
 }
 
 pub trait TokenService: Send + Sync {

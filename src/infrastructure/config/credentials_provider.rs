@@ -6,11 +6,9 @@ use super::errors::CredentialsError;
 use crate::domain::settings::model::Credentials;
 use crate::domain::settings::service::CredentialsService;
 
-
 lazy_static! {
     static ref CREDENTIALS_CACHE: RwLock<Option<Credentials>> = RwLock::new(None);
 }
-
 
 pub struct CredentialsProvider;
 

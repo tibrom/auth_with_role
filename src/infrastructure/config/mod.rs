@@ -1,2 +1,2 @@
-pub mod errors;
 pub mod credentials_provider;
+pub mod errors;

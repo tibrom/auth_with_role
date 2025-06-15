@@ -14,7 +14,6 @@ pub struct User {
     api_key_hash: Option<String>,
 }
 
-
 #[derive(Getters, Setters, Debug, Clone, PartialEq)]
 pub struct UserNameEmailPasswordHash {
     #[get = "pub"]
@@ -25,10 +24,13 @@ pub struct UserNameEmailPasswordHash {
     password_hash: String,
 }
 
-
 impl UserNameEmailPasswordHash {
     pub fn new(username: &str, email: &str, password_hash: &str) -> Self {
-        Self { username: username.to_string(), email: email.to_string(), password_hash: password_hash.to_string() }
+        Self {
+            username: username.to_string(),
+            email: email.to_string(),
+            password_hash: password_hash.to_string(),
+        }
     }
 }
 
@@ -52,7 +54,7 @@ pub struct UserWithRole {
 }
 
 impl UserWithRole {
-    pub fn add_role(&mut self, role: &AllowedRoles){
+    pub fn add_role(&mut self, role: &AllowedRoles) {
         self.allowed_roles.push(role.clone());
     }
 }
@@ -72,12 +74,12 @@ pub struct AllowedRoles {
 
 impl AllowedRoles {
     pub fn new_default(role: &str, user_id: &Uuid) -> Self {
-        Self { 
+        Self {
             id: None,
             role: role.to_string(),
             is_default: true,
             created_at: None,
-            user_id: user_id.clone() 
+            user_id: user_id.clone(),
         }
     }
 }

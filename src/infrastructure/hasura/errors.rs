@@ -21,9 +21,9 @@ pub enum HasuraClientError {
 
     #[error("Credentials error")]
     CredentialsError,
-    
+
     #[error("Credentials error")]
-    ErrorInitHasuraClient
+    ErrorInitHasuraClient,
 }
 
 /// Ошибка Hasura (десериализуется из тела ответа)

@@ -1,15 +1,15 @@
-use std::collections::HashMap;
 use actix_web::http;
 use serde_json::{json, Value};
+use std::collections::HashMap;
 
 use crate::domain::jwt::service::{JwtClaimsService as _, TokenService};
 
-use super::gql_builder::GqlBuilder;
 use super::errors::{HasuraClientError, HasuraErrorResponse};
+use super::gql_builder::GqlBuilder;
 use super::http_client::HttpClient;
 
-use super::jwt::token::TokenProvider;
 use super::jwt::claims::ClaimsProvider;
+use super::jwt::token::TokenProvider;
 
 #[derive(Clone, Debug)]
 pub struct HasuraClient {
@@ -23,18 +23,22 @@ impl HasuraClient {
 
         let mut srv = HttpClient::new(hasura_url);
 
-        let claims = ClaimsProvider.inner_access_claims()
+        let claims = ClaimsProvider
+            .inner_access_claims()
             .map_err(|e| HasuraClientError::CredentialsError)?;
-        let token = TokenProvider.generate_access(claims)
+        let token = TokenProvider
+            .generate_access(claims)
             .map_err(|e| HasuraClientError::CredentialsError)?;
         let mut header_list: Vec<(String, String)> = Vec::new();
         header_list.push(("Authorization".to_string(), format!("Bearer {token}")));
         header_list.push(("content-type".to_string(), "application/json".to_string()));
         srv.set_headers(header_list);
 
-        Ok(Self { collection: HashMap::new(), http: srv })
+        Ok(Self {
+            collection: HashMap::new(),
+            http: srv,
+        })
     }
-
 
     pub fn add_query(&mut self, operation_name: impl ToString, query: impl ToString) {
         self.collection.insert(

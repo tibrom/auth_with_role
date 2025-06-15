@@ -1,7 +1,8 @@
 use getset::{Getters, Setters};
 
-
-#[derive(Getters, Setters, Debug, Clone, serde::Deserialize, serde::Serialize, PartialEq, Default)]
+#[derive(
+    Getters, Setters, Debug, Clone, serde::Deserialize, serde::Serialize, PartialEq, Default,
+)]
 pub struct Credentials {
     #[get = "pub"]
     host: String,
@@ -24,22 +25,25 @@ pub struct Credentials {
     #[get = "pub"]
     api_key_length: u16,
     #[get = "pub"]
-    encryption_api_key: String
+    encryption_api_key: String,
 }
 
-#[derive(Getters, Setters, Debug, Clone, serde::Deserialize, serde::Serialize, PartialEq, Default)]
-pub struct HasuraCredentials{
+#[derive(
+    Getters, Setters, Debug, Clone, serde::Deserialize, serde::Serialize, PartialEq, Default,
+)]
+pub struct HasuraCredentials {
     #[get = "pub"]
     x_hasura_default_role: String,
     #[get = "pub"]
     exp: i16, //hours
     #[get = "pub"]
-    x_hasura_user_id: String
+    x_hasura_user_id: String,
 }
 
-
-#[derive(Getters, Setters, Debug, Clone, serde::Deserialize, serde::Serialize, PartialEq, Default)]
-pub struct NewUserRole{
+#[derive(
+    Getters, Setters, Debug, Clone, serde::Deserialize, serde::Serialize, PartialEq, Default,
+)]
+pub struct NewUserRole {
     #[get = "pub"]
     with_email: String,
     #[get = "pub"]
