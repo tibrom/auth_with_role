@@ -4,14 +4,14 @@ use crate::application::sign_up::dto::UserDataPairDto;
 use crate::domain::user::model::{AllowedRoles, UserNameEmailPasswordHash};
 use crate::domain::verifies::service::PasswordVerifierService;
 use crate::domain::settings::service::CredentialsService;
-use crate::domain::user::service::RemoteUserService;
+use crate::domain::user::service::{CommandUserService, QueryUserService};
 
 const WRONG_CREDENTIALS: &str = "Incorrect login or password";
 const INTERNAL_ERROR_SERVER: &str = "Internal error";
 
 
 pub struct SignUpWithEmailUseCase<U, V, C>{
-    user_provider: U,
+    command_user_service: U,
     verifier: V,
     credentials_provider: C
 
@@ -20,12 +20,12 @@ pub struct SignUpWithEmailUseCase<U, V, C>{
 impl<U, V, C> SignUpWithEmailUseCase<U, V, C>
 where
     V: PasswordVerifierService,
-    U: RemoteUserService,
+    U: CommandUserService,
     C: CredentialsService {
 
-    pub fn new(user_provider: U, verifier: V, credentials_provider: C) -> Self {
+    pub fn new(command_user_service: U, verifier: V, credentials_provider: C) -> Self {
         Self {
-            user_provider,
+            command_user_service,
             verifier,
             credentials_provider
         }
@@ -36,7 +36,7 @@ where
             .map_err(|e| format!("Password hash {e}"))?;
 
         let new_user_data= UserNameEmailPasswordHash::new(&user.username, &user.email, &password_hash);
-        let new_user = match self.user_provider.create_user(new_user_data).await {
+        let new_user = match self.command_user_service.create_user(new_user_data).await {
             Ok(u) => u,
             Err(e) => {
                 tracing::error!("User not created: {e}");
@@ -44,12 +44,12 @@ where
             }
         };
         let default_role = self.credentials_provider.get_credentials()
-            .map(|v| v.new_user_role().clone())
+            .map(|v| v.new_user_role().with_email().clone())
             .map_err(|e| format!("Credentials not allowed"))?;
 
         let allowed_roles = AllowedRoles::new_default(&default_role, new_user.id());
 
-        match self.user_provider.add_role(allowed_roles).await {
+        match self.command_user_service.add_role(new_user, allowed_roles).await {
             Ok(u) => {
                 let email = u.email().clone().unwrap_or_else(||"".to_string());
                 let user = UserDataPairDto {

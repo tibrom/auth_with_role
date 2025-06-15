@@ -1,6 +1,8 @@
 use std::fmt;
 use thiserror::Error;
 use jsonwebtoken::errors::Error as JwtLibraryError;
+use crate::domain::errors::service::{AppErrorInfo, ErrorLevel};
+
 
 use super::config::errors::CredentialsError;
 
@@ -24,6 +26,41 @@ pub enum JwtError {
         #[source]
         source: JwtLibraryError,
     },
+}
+
+impl AppErrorInfo for JwtError  {
+    fn client_message(&self) -> String {
+        match self {
+            JwtError::CredentialsUnavailable(e) => {
+                self.internal_error()
+            }
+            JwtError::DefaultRoleMissing => {
+                format!("Missing default role")
+            }
+            JwtError::JwtProcessingError { stage, source } => {
+                format!("Token is not correct")
+            }
+        }
+    }
+    fn level(&self) -> ErrorLevel {
+        match self {
+            JwtError::CredentialsUnavailable(_) => ErrorLevel::Error,
+            _ => ErrorLevel::Info
+        }
+    }
+    fn log_message(&self) -> String {
+        match self {
+            JwtError::CredentialsUnavailable(e) => {
+                format!("JwtError::CredentialsUnavailable:: {} ", e)
+            }
+            JwtError::DefaultRoleMissing => {
+                format!("JwtError::DefaultRoleMissing")
+            }
+            JwtError::JwtProcessingError { stage, source } => {
+                format!("JwtError::JwtProcessingError stage: {} source: {}", stage, source)
+            }
+        }
+    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

@@ -11,11 +11,8 @@ pub async fn signup(
     let result = data.sign_up_use_case.clone().sign_up(dto).await;
 
     match result {
-        Ok(SignUpResponseDto::Success { user }) => {
-            HttpResponse::Ok().json(user)
-        }
-        Ok(SignUpResponseDto::Error { err_msg }) => {
-            HttpResponse::Unauthorized().json(serde_json::json!({ "error": err_msg }))
+        Ok(v) => {
+            HttpResponse::Ok().json(v)
         }
         Err(_) => HttpResponse::InternalServerError().json(serde_json::json!({
             "error": "Internal error"

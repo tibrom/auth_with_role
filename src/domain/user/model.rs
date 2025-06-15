@@ -46,7 +46,15 @@ pub struct UserWithRole {
     #[get = "pub"]
     password_hash: Option<String>,
     #[get = "pub"]
+    aip_key_hash: Option<String>,
+    #[get = "pub"]
     allowed_roles: Vec<AllowedRoles>,
+}
+
+impl UserWithRole {
+    pub fn add_role(&mut self, role: &AllowedRoles){
+        self.allowed_roles.push(role.clone());
+    }
 }
 
 #[derive(Getters, Setters, Debug, Clone, serde::Deserialize, serde::Serialize, PartialEq)]
