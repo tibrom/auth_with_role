@@ -11,8 +11,6 @@ use uuid::Uuid;
 const CHARSET: &[u8] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
 const BASE: usize = 62;
 const NONCE_LEN: usize = 12;
-const ENCRYPTED_UUID_LEN_ESTIMATE: usize = 60;
-const API_KEY_MIN_LEN: usize = 64;
 
 pub struct ApiKeyVerifier {
     pub encryption_key: [u8; 32], // 256-bit key
@@ -50,7 +48,7 @@ impl ApiKeyVerifier {
         let cipher = Aes256Gcm::new(key);
 
         let mut nonce_bytes = [0u8; NONCE_LEN];
-        OsRng.try_fill_bytes(&mut nonce_bytes);
+        _ = OsRng.try_fill_bytes(&mut nonce_bytes);
         let nonce = Nonce::from_slice(&nonce_bytes);
 
         let ciphertext = cipher

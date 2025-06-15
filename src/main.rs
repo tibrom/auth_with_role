@@ -46,7 +46,6 @@ async fn main() -> std::io::Result<()> {
     let login_api_key_use_case = LoginApiKeyUseCase::new(
         UserQuery,
         ApiKeyVerifier::new(credentials.encryption_api_key()),
-        CredentialsProvider,
         ClaimsProvider,
         TokenProvider,
     );

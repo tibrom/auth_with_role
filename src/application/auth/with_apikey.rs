@@ -9,7 +9,6 @@ use crate::domain::user::service::{CommandUserService, QueryUserService};
 use crate::domain::verifies::service::{ApiKeyVerifierService, PasswordVerifierService};
 
 const WRONG_CREDENTIALS: &str = "Incorrect login or password";
-const INTERNAL_ERROR_SERVER: &str = "Internal error";
 
 pub struct CreateApiKeyUseCase<U, Q, V, A, C> {
     user_service: U,
@@ -93,9 +92,6 @@ where
         Ok(CreateApiKeyResponseDto::Success { api_key })
     }
 
-    fn internal_error(&self) -> Result<CreateApiKeyResponseDto, String> {
-        Err(INTERNAL_ERROR_SERVER.to_string())
-    }
 
     fn handler_error<E: AppErrorInfo>(&self, e: E) -> Result<CreateApiKeyResponseDto, String> {
         match e.level() {
@@ -113,35 +109,31 @@ where
     }
 }
 
-pub struct LoginApiKeyUseCase<Q, A, C, CP, TP> {
+pub struct LoginApiKeyUseCase<Q, A, CP, TP> {
     query_user_service: Q,
     api_key_verifier: A,
-    credentials_provider: C,
     claims_provider: CP,
     token_provider: TP,
 }
 
-impl<Q, A, C, CP, TP> ServiceErrorExt for LoginApiKeyUseCase<Q, A, C, CP, TP> {}
+impl<Q, A, CP, TP> ServiceErrorExt for LoginApiKeyUseCase<Q, A, CP, TP> {}
 
-impl<Q, A, C, CP, TP> LoginApiKeyUseCase<Q, A, C, CP, TP>
+impl<Q, A, CP, TP> LoginApiKeyUseCase<Q, A, CP, TP>
 where
     Q: QueryUserService,
     A: ApiKeyVerifierService,
-    C: CredentialsService,
     CP: JwtClaimsService,
     TP: TokenService,
 {
     pub fn new(
         query_user_service: Q,
         api_key_verifier: A,
-        credentials_provider: C,
         claims_provider: CP,
         token_provider: TP,
     ) -> Self {
         Self {
             query_user_service,
             api_key_verifier,
-            credentials_provider,
             claims_provider,
             token_provider,
         }

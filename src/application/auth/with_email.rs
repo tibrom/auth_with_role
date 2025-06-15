@@ -7,7 +7,6 @@ use crate::domain::user::service::QueryUserService;
 use crate::domain::verifies::service::PasswordVerifierService;
 
 const WRONG_CREDENTIALS: &str = "Incorrect login or password";
-const INTERNAL_ERROR_SERVER: &str = "Internal error";
 
 pub struct LoginWithEmailUseCase<U, V, C, T> {
     user_provider: U,

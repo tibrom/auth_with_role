@@ -24,10 +24,11 @@ impl HasuraClient {
 
         let claims = ClaimsProvider
             .inner_access_claims()
-            .map_err(|e| HasuraClientError::CredentialsError)?;
+            .map_err(|_| HasuraClientError::CredentialsError)?;
         let token = TokenProvider
             .generate_access(claims)
-            .map_err(|e| HasuraClientError::CredentialsError)?;
+            .map_err(|_| HasuraClientError::CredentialsError)?;
+        
         let mut header_list: Vec<(String, String)> = Vec::new();
         header_list.push(("Authorization".to_string(), format!("Bearer {token}")));
         header_list.push(("content-type".to_string(), "application/json".to_string()));

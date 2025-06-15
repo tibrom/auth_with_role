@@ -9,7 +9,6 @@ use super::query_loader::GraphQLDLoader;
 use crate::domain::settings::service::CredentialsService as _;
 use crate::infrastructure::hasura::client::HasuraClient;
 
-const HOST: &str = "https://extrabot.ru";
 
 pub const GET_USER_BY_EMAIL: &str = "get_user_by_email";
 pub const GET_USER_BY_ID: &str = "get_user_by_id";
@@ -49,7 +48,7 @@ impl HasuraClientManager {
         for filename in GQL_FILES {
             let content = louder
                 .read_query(&format!("{filename}.graphql"))
-                .map_err(|e| HasuraClientError::ErrorInitHasuraClient)?;
+                .map_err(|_| HasuraClientError::ErrorInitHasuraClient)?;
             gql_client.add_query(filename, content);
         }
         Ok(gql_client)
@@ -64,7 +63,7 @@ impl HasuraClientManager {
         }
 
         let hasura_client =
-            Self::create_hasura_client().map_err(|e| HasuraClientError::ErrorInitHasuraClient)?;
+            Self::create_hasura_client().map_err(|_| HasuraClientError::ErrorInitHasuraClient)?;
 
         let mut cache_lock = HASURA_CLIENT_CACHE.write().await;
         *cache_lock = Some(hasura_client.clone());

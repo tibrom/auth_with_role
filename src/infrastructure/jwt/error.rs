@@ -30,11 +30,11 @@ pub enum JwtError {
 impl AppErrorInfo for JwtError {
     fn client_message(&self) -> String {
         match self {
-            JwtError::CredentialsUnavailable(e) => self.internal_error(),
+            JwtError::CredentialsUnavailable(_) => self.internal_error(),
             JwtError::DefaultRoleMissing => {
                 format!("Missing default role")
             }
-            JwtError::JwtProcessingError { stage, source } => {
+            JwtError::JwtProcessingError { .. } => {
                 format!("Token is not correct")
             }
         }

@@ -18,7 +18,6 @@ type SignUpUseCaseConcrete =
 type LoginApiKeyUseCaseConcrete = LoginApiKeyUseCase<
     UserQuery,
     ApiKeyVerifier,
-    CredentialsProvider,
     ClaimsProvider,
     TokenProvider,
 >;
