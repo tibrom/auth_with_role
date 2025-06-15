@@ -19,8 +19,7 @@ pub enum CredentialsError {
     },
 }
 
-
-impl AppErrorInfo for CredentialsError  {
+impl AppErrorInfo for CredentialsError {
     fn client_message(&self) -> String {
         self.internal_error()
     }
@@ -36,7 +35,10 @@ impl AppErrorInfo for CredentialsError  {
                 format!("CredentialsError::CacheWriteError::{}", e)
             }
             CredentialsError::Config { stage, source } => {
-                format!("CredentialsError::Config stage: {} source: {}", stage, source)
+                format!(
+                    "CredentialsError::Config stage: {} source: {}",
+                    stage, source
+                )
             }
         }
     }

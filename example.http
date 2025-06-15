@@ -13,7 +13,7 @@ content-type: application/json
 
 {
     "username": "Andrei",
-    "email": "gorlans1@mail.ru",
+    "email": "gorlans2@mail.ru",
     "password": "12345678"
 }
 ###
@@ -32,7 +32,7 @@ POST http://127.0.0.1:8081/auth/loginapikey HTTP/1.1
 content-type: application/json
 
 {
-    "api_key": "xVB9oWQziifvVTD8z/Q3PGrdna50ckhe4Xpfun/CjVf64qQ8Kpp7sbsaEVQ-FR0gcsYFFR9hijzUgebcDWCnavIDjczHunyeyFfCvlzMGqrPZb8AsQbiYs58BMzs"
+    "api_key": "Iv+9v38CrV+20qaYeyY+Gz5TBL0lgtNynOO7F9u4mFt8Hmim680Nu/JSiyg-GfrIKDtxQzImkKk6WtqJ51Bu2aQT5Xm6"
 }
 ###
 

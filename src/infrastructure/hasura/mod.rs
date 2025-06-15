@@ -3,8 +3,8 @@ pub mod client_manager;
 pub mod errors;
 
 mod gql_builder;
-mod query_loader;
 mod http_client;
+mod query_loader;
 
-use super::jwt;
 use super::config;
+use super::jwt;

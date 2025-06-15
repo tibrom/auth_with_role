@@ -1,4 +1,3 @@
-
 #[derive(Debug, Clone, Copy)]
 pub enum ErrorLevel {
     Info,
@@ -15,4 +14,3 @@ pub trait AppErrorInfo {
     fn client_message(&self) -> String;
     fn log_message(&self) -> String;
 }
-

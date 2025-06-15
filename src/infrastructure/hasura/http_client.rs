@@ -41,7 +41,7 @@ impl HttpClient {
         // Add trace header
         let uuid = trace_id.unwrap_or(Uuid::new_v4().to_string());
         rb = rb.header("X-API-TraceId".to_string(), uuid.clone());
-    
+
         match rb.send().await {
             Ok(r) => r.error_for_status(),
             Err(e) => {
@@ -79,7 +79,6 @@ impl HttpClient {
             .await
             {
                 Ok(response) => {
-                    
                     //info!("Resolved traceId: {} duration: {}ms",trace_id,elapsed.elapsed().unwrap().as_millis());
                     break Ok(response);
                 }

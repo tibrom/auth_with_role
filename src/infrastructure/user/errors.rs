@@ -1,6 +1,5 @@
-use std::fmt;
-use thiserror::Error;
 use crate::domain::errors::service::{AppErrorInfo, ErrorLevel};
+use thiserror::Error;
 
 /// Основная ошибка GraphQL клиента (обёртка)
 #[derive(Debug, Error)]
@@ -21,17 +20,19 @@ pub enum UserManagerError {
     FailedCreateAllowedRoles,
 
     #[error("Failed create allowed roles")]
-    FailedUpdateApiKey
+    FailedUpdateApiKey,
 }
 
-impl AppErrorInfo for  UserManagerError {
+impl AppErrorInfo for UserManagerError {
     fn client_message(&self) -> String {
         match self {
             UserManagerError::FailedCreateUser => "Failed create user try again".to_string(),
-            UserManagerError::FailedCreateAllowedRoles => "Failed to assign role, contact administrator".to_string(),
+            UserManagerError::FailedCreateAllowedRoles => {
+                "Failed to assign role, contact administrator".to_string()
+            }
             UserManagerError::FailedUpdateApiKey => "Failed create api key try again".to_string(),
             UserManagerError::UserNotFound => "User not found".to_string(),
-            _ => self.internal_error()
+            _ => self.internal_error(),
         }
     }
     fn level(&self) -> crate::domain::errors::service::ErrorLevel {
@@ -40,18 +41,21 @@ impl AppErrorInfo for  UserManagerError {
             UserManagerError::FailedCreateAllowedRoles => ErrorLevel::Critical,
             UserManagerError::FailedUpdateApiKey => ErrorLevel::Info,
             UserManagerError::UserNotFound => ErrorLevel::Info,
-            _ => ErrorLevel::Error
+            _ => ErrorLevel::Error,
         }
     }
     fn log_message(&self) -> String {
         match self {
-            UserManagerError::ResponseJsonParseError(err) => format!("Failed to parse JSON from response: {err}"),
+            UserManagerError::ResponseJsonParseError(err) => {
+                format!("Failed to parse JSON from response: {err}")
+            }
             UserManagerError::HasuraClientError(err) => format!("Hasura request error: {err}"),
             UserManagerError::UserNotFound => "User not found.".to_string(),
             UserManagerError::FailedCreateUser => "Failed to create user.".to_string(),
-            UserManagerError::FailedCreateAllowedRoles => "Failed to create allowed roles.".to_string(),
+            UserManagerError::FailedCreateAllowedRoles => {
+                "Failed to create allowed roles.".to_string()
+            }
             UserManagerError::FailedUpdateApiKey => "Failed to update API key.".to_string(),
         }
     }
-
 }

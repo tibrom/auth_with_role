@@ -1,13 +1,12 @@
-use std::clone;
 
-use crate::domain::user::{model::{AllowedRoles, UserWithRole, UserNameEmailPasswordHash}};
+use crate::domain::user::model::{AllowedRoles, UserNameEmailPasswordHash, UserWithRole};
 use crate::domain::user::service::{CommandUserService, QueryUserService};
 
-use super::hasura::client_manager::{
-    HasuraClientManager, GET_USER_BY_EMAIL, GET_USER_BY_ID, GET_USER_BY_TG_ID, CREATE_USER, CREATE_ALLOWED_ROLES, UPDATE_API_KEY_USER};
-use super::hasura::client::HasuraClient;
 use super::errors::UserManagerError;
-
+use super::hasura::client_manager::{
+    HasuraClientManager, CREATE_ALLOWED_ROLES, CREATE_USER, GET_USER_BY_EMAIL, GET_USER_BY_ID,
+    GET_USER_BY_TG_ID, UPDATE_API_KEY_USER,
+};
 
 #[derive(Debug, Clone, serde::Deserialize, serde::Serialize, PartialEq)]
 pub struct HasuraAnswerUser {
@@ -16,14 +15,13 @@ pub struct HasuraAnswerUser {
 
 #[derive(Debug, Clone, serde::Deserialize, serde::Serialize, PartialEq)]
 pub struct HasuraCreatedUser {
-    pub new: HasuraAnswerUser
+    pub new: HasuraAnswerUser,
 }
 
 #[derive(Debug, Clone, serde::Deserialize, serde::Serialize, PartialEq)]
 pub struct HasuraCreatedRoles {
-    pub new: HasuraAllowedRoles
+    pub new: HasuraAllowedRoles,
 }
-
 
 #[derive(Debug, Clone, serde::Deserialize, serde::Serialize, PartialEq)]
 pub struct HasuraAllowedRoles {
@@ -32,14 +30,16 @@ pub struct HasuraAllowedRoles {
 
 pub struct UserCommand;
 
-
 impl CommandUserService for UserCommand {
     type Error = UserManagerError;
-    
 
-    async fn create_user(&self, new_user: UserNameEmailPasswordHash) -> Result<UserWithRole, Self::Error> {
+    async fn create_user(
+        &self,
+        new_user: UserNameEmailPasswordHash,
+    ) -> Result<UserWithRole, Self::Error> {
         let client = HasuraClientManager::get_hasura_client()
-            .await.map_err(|e| UserManagerError::HasuraClientError(e))?;
+            .await
+            .map_err(|e| UserManagerError::HasuraClientError(e))?;
         let variables = serde_json::json!(
             {
                 "password_hash": new_user.password_hash(),
@@ -47,22 +47,28 @@ impl CommandUserService for UserCommand {
                 "email": new_user.email()
             }
         );
-        let value = client.execute(CREATE_USER, variables).await
+        let value = client
+            .execute(CREATE_USER, variables)
+            .await
             .map_err(|e| UserManagerError::HasuraClientError(e))?;
 
         let parsed_result: HasuraCreatedUser = serde_json::from_value(value)
             .map_err(|e| UserManagerError::ResponseJsonParseError(e))?;
 
-
         match parsed_result.new.user.first() {
             Some(user) => Ok(user.clone()),
-            None => Err(UserManagerError::FailedCreateUser)
+            None => Err(UserManagerError::FailedCreateUser),
         }
     }
 
-    async fn add_role(&self, mut user: UserWithRole, allowed_roles: AllowedRoles) -> Result<UserWithRole, Self::Error> {
+    async fn add_role(
+        &self,
+        mut user: UserWithRole,
+        allowed_roles: AllowedRoles,
+    ) -> Result<UserWithRole, Self::Error> {
         let client = HasuraClientManager::get_hasura_client()
-            .await.map_err(|e| UserManagerError::HasuraClientError(e))?;
+            .await
+            .map_err(|e| UserManagerError::HasuraClientError(e))?;
         let variables = serde_json::json!(
             {
                 "role": allowed_roles.role(),
@@ -70,7 +76,9 @@ impl CommandUserService for UserCommand {
                 "is_default": allowed_roles.is_default()
             }
         );
-        let value = client.execute(CREATE_ALLOWED_ROLES, variables).await
+        let value = client
+            .execute(CREATE_ALLOWED_ROLES, variables)
+            .await
             .map_err(|e| UserManagerError::HasuraClientError(e))?;
 
         let parsed_result: HasuraCreatedRoles = serde_json::from_value(value)
@@ -87,7 +95,8 @@ impl CommandUserService for UserCommand {
 
     async fn add_api_hash(&self, id: &str, api_hash: &str) -> Result<UserWithRole, Self::Error> {
         let client = HasuraClientManager::get_hasura_client()
-            .await.map_err(|e| UserManagerError::HasuraClientError(e))?;
+            .await
+            .map_err(|e| UserManagerError::HasuraClientError(e))?;
         let variables = serde_json::json!(
             {
                 "user_id": id,
@@ -95,21 +104,20 @@ impl CommandUserService for UserCommand {
             }
         );
 
-        let value = client.execute(UPDATE_API_KEY_USER, variables).await
+        let value = client
+            .execute(UPDATE_API_KEY_USER, variables)
+            .await
             .map_err(|e| UserManagerError::HasuraClientError(e))?;
 
         let parsed_result: HasuraCreatedUser = serde_json::from_value(value)
             .map_err(|e| UserManagerError::ResponseJsonParseError(e))?;
 
-
         match parsed_result.new.user.first() {
             Some(user) => Ok(user.clone()),
-            None => Err(UserManagerError::FailedUpdateApiKey)
+            None => Err(UserManagerError::FailedUpdateApiKey),
         }
-
     }
 }
-
 
 pub struct UserQuery;
 
@@ -117,46 +125,49 @@ impl QueryUserService for UserQuery {
     type Error = UserManagerError;
     async fn get_user_by_email(&self, email: &str) -> Result<Option<UserWithRole>, Self::Error> {
         let client = HasuraClientManager::get_hasura_client()
-            .await.map_err(|e| UserManagerError::HasuraClientError(e))?;
+            .await
+            .map_err(|e| UserManagerError::HasuraClientError(e))?;
         let variables = serde_json::json!({ "email": email });
-        let value = client.execute(GET_USER_BY_EMAIL, variables).await
+        let value = client
+            .execute(GET_USER_BY_EMAIL, variables)
+            .await
             .map_err(|e| UserManagerError::HasuraClientError(e))?;
 
         let parsed_result: HasuraAnswerUser = serde_json::from_value(value)
             .map_err(|e| UserManagerError::ResponseJsonParseError(e))?;
-        Ok(parsed_result.user.first().and_then(|v|Some(v.clone())))
+        Ok(parsed_result.user.first().and_then(|v| Some(v.clone())))
     }
 
     async fn get_user_by_id(&self, id: &str) -> Result<Option<UserWithRole>, Self::Error> {
         let client = HasuraClientManager::get_hasura_client()
-            .await.map_err(|e| UserManagerError::HasuraClientError(e))?;
-        
+            .await
+            .map_err(|e| UserManagerError::HasuraClientError(e))?;
+
         let variables = serde_json::json!({ "id": id });
-        let value = client.execute(GET_USER_BY_ID, variables).await
-            .map_err(
-                |e|
-                {
-                    UserManagerError::HasuraClientError(e)
-                }
-            )?;
-
-
-        let parsed_result: HasuraAnswerUser = serde_json::from_value(value)
-            .map_err(|e| UserManagerError::ResponseJsonParseError(e))?;
-
-        Ok(parsed_result.user.first().and_then(|v|Some(v.clone())))
-    }
-
-    async fn get_user_by_tg_id(&self, tg_id: &str) -> Result<Option<UserWithRole>, Self::Error> {
-        let client = HasuraClientManager::get_hasura_client()
-            .await.map_err(|e| UserManagerError::HasuraClientError(e))?;
-        let variables = serde_json::json!({ "tg_id": tg_id });
-        let value = client.execute(GET_USER_BY_TG_ID, variables).await
+        let value = client
+            .execute(GET_USER_BY_ID, variables)
+            .await
             .map_err(|e| UserManagerError::HasuraClientError(e))?;
 
         let parsed_result: HasuraAnswerUser = serde_json::from_value(value)
             .map_err(|e| UserManagerError::ResponseJsonParseError(e))?;
 
-        Ok(parsed_result.user.first().and_then(|v|Some(v.clone())))
+        Ok(parsed_result.user.first().and_then(|v| Some(v.clone())))
+    }
+
+    async fn get_user_by_tg_id(&self, tg_id: &str) -> Result<Option<UserWithRole>, Self::Error> {
+        let client = HasuraClientManager::get_hasura_client()
+            .await
+            .map_err(|e| UserManagerError::HasuraClientError(e))?;
+        let variables = serde_json::json!({ "tg_id": tg_id });
+        let value = client
+            .execute(GET_USER_BY_TG_ID, variables)
+            .await
+            .map_err(|e| UserManagerError::HasuraClientError(e))?;
+
+        let parsed_result: HasuraAnswerUser = serde_json::from_value(value)
+            .map_err(|e| UserManagerError::ResponseJsonParseError(e))?;
+
+        Ok(parsed_result.user.first().and_then(|v| Some(v.clone())))
     }
 }
