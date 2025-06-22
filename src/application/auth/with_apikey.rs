@@ -8,6 +8,13 @@ use crate::domain::settings::service::CredentialsService;
 use crate::domain::user::service::{CommandUserService, QueryUserService};
 use crate::domain::verifies::service::{ApiKeyVerifierService, PasswordVerifierService};
 
+use crate::domain::jwt::factories::JWTProviderFactory;
+use crate::domain::verifies::factories::VerifiesProviderFactory;
+use crate::domain::user::factories::UserProviderFactory;
+
+use super::authenticators::with_apikey::CreateJwtWithApiKeyUseCase;
+
+
 const WRONG_CREDENTIALS: &str = "Incorrect login or password";
 
 pub struct CreateApiKeyUseCase<U, Q, V, A, C> {
@@ -109,98 +116,50 @@ where
     }
 }
 
-pub struct LoginApiKeyUseCase<Q, A, CP, TP> {
-    query_user_service: Q,
-    api_key_verifier: A,
-    claims_provider: CP,
-    token_provider: TP,
+pub struct LoginApiKeyUseCase<J, V, U> {
+    jwtprovider_factory: J,
+    verifies_provider_factory: V,
+    user_provider_factory: U,
 }
 
-impl<Q, A, CP, TP> ServiceErrorExt for LoginApiKeyUseCase<Q, A, CP, TP> {}
+impl<J, V, U> ServiceErrorExt for LoginApiKeyUseCase<J, V, U> {}
 
-impl<Q, A, CP, TP> LoginApiKeyUseCase<Q, A, CP, TP>
+impl<J, V, U> LoginApiKeyUseCase<J, V, U>
 where
-    Q: QueryUserService,
-    A: ApiKeyVerifierService,
-    CP: JwtClaimsService,
-    TP: TokenService,
+    J: JWTProviderFactory,
+    V: VerifiesProviderFactory,
+    U: UserProviderFactory
 {
     pub fn new(
-        query_user_service: Q,
-        api_key_verifier: A,
-        claims_provider: CP,
-        token_provider: TP,
+        jwtprovider_factory: J,
+        verifies_provider_factory: V,
+        user_provider_factory: U,
     ) -> Self {
         Self {
-            query_user_service,
-            api_key_verifier,
-            claims_provider,
-            token_provider,
+            jwtprovider_factory,
+            verifies_provider_factory,
+            user_provider_factory,
         }
     }
     pub async fn login(
         &self,
         dto: LoginApiKeyRequestDto,
     ) -> Result<LoginApiKeyResponseDto, String> {
-        let user_id = match self.api_key_verifier.extract_user_id(&dto.api_key) {
-            Ok(id) => id,
-            Err(e) => {
-                return self.handler_error(e);
-            }
-        };
 
-        let user = match self
-            .query_user_service
-            .get_user_by_id(&user_id.to_string())
-            .await
-        {
-            Ok(Some(v)) => v,
-            Ok(None) => return self.map_none("User not found"),
-            Err(e) => return self.handler_error(e),
-        };
+        let create_jwt_use_case = CreateJwtWithApiKeyUseCase::new(
+            &self.user_provider_factory,
+            &self.verifies_provider_factory,
+            &self.jwtprovider_factory
+        );
 
-        let Some(api_key_hash) = user.aip_key_hash() else {
-            return self.map_none("Api key not allowed");
-        };
-
-        let is_verified = match self
-            .api_key_verifier
-            .is_verified(&api_key_hash, &dto.api_key)
-        {
+        let token_pair_dto = match create_jwt_use_case.create_access(dto.api_key).await {
             Ok(v) => v,
-            Err(e) => return self.handler_error(e),
+            Err(e) => return self.handler_error(e)
         };
 
-        if !is_verified {
-            return Ok(LoginApiKeyResponseDto::Error {
-                err_msg: WRONG_CREDENTIALS.to_string(),
-            });
-        }
-        match self
-            .api_key_verifier
-            .is_verified(&api_key_hash, &dto.api_key)
-        {
-            Ok(true) => {}
-            Ok(false) => {
-                return Ok(LoginApiKeyResponseDto::Error {
-                    err_msg: WRONG_CREDENTIALS.to_string(),
-                })
-            }
-            Err(e) => return self.handler_error(e),
-        };
-
-        let claims = match self.claims_provider.access_claims(&user) {
-            Ok(v) => v,
-            Err(e) => return self.handler_error(e),
-        };
-
-        let access_token = match self.token_provider.generate_access(claims) {
-            Ok(v) => v,
-            Err(e) => return self.handler_error(e),
-        };
 
         Ok(LoginApiKeyResponseDto::Success {
-            access_token: access_token,
+            auth_data: token_pair_dto
         })
     }
 

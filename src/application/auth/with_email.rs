@@ -1,35 +1,37 @@
 use super::dto::{LoginEmailPasRequestDto, LoginEmailPasResponseDto};
 use super::ServiceErrorExt;
-use crate::application::auth::dto::TokenPairDto;
+
 use crate::domain::errors::service::{AppErrorInfo, ErrorLevel};
-use crate::domain::jwt::service::{JwtClaimsService, TokenService};
-use crate::domain::user::service::QueryUserService;
-use crate::domain::verifies::service::PasswordVerifierService;
+use crate::domain::jwt::factories::JWTProviderFactory;
+use crate::domain::user::factories::UserProviderFactory;
+use crate::domain::verifies::factories::VerifiesProviderFactory;
 
-const WRONG_CREDENTIALS: &str = "Incorrect login or password";
+use super::authenticators::with_email::CreateJwtWithEmailPasswdUseCase;
 
-pub struct LoginWithEmailUseCase<U, V, C, T> {
-    user_provider: U,
-    verifier: V,
-    claims_provider: C,
-    token_provider: T,
+
+pub struct LoginWithEmailUseCase<J, V, U> {
+    jwtprovider_factory: J,
+    verifies_provider_factory: V,
+    user_provider_factory: U,
 }
 
-impl<U, V, C, T> ServiceErrorExt for LoginWithEmailUseCase<U, V, C, T> {}
+impl<J, V, U> ServiceErrorExt for LoginWithEmailUseCase<J, V, U> {}
 
-impl<U, V, C, T> LoginWithEmailUseCase<U, V, C, T>
+impl<J, V, U> LoginWithEmailUseCase<J, V, U>
 where
-    V: PasswordVerifierService,
-    T: TokenService,
-    C: JwtClaimsService,
-    U: QueryUserService,
+    J: JWTProviderFactory,
+    V: VerifiesProviderFactory,
+    U: UserProviderFactory
 {
-    pub fn new(user_provider: U, verifier: V, claims_provider: C, token_provider: T) -> Self {
+    pub fn new(
+        jwtprovider_factory: J,
+        verifies_provider_factory: V,
+        user_provider_factory: U,
+    ) -> Self {
         Self {
-            user_provider,
-            verifier,
-            claims_provider,
-            token_provider,
+            jwtprovider_factory,
+            verifies_provider_factory,
+            user_provider_factory,
         }
     }
 
@@ -37,46 +39,18 @@ where
         &self,
         dto: LoginEmailPasRequestDto,
     ) -> Result<LoginEmailPasResponseDto, String> {
-        let user = match self.user_provider.get_user_by_email(&dto.email).await {
-            Ok(Some(user)) => user,
-            Ok(None) => return self.map_none(WRONG_CREDENTIALS),
-            Err(e) => return self.handler_error(e),
-        };
 
-        let Some(password_hash) = user.password_hash() else {
-            return self.map_none(WRONG_CREDENTIALS);
-        };
+        let create_jwt_use_case = CreateJwtWithEmailPasswdUseCase::new(
+            &self.user_provider_factory,
+            &self.verifies_provider_factory,
+            &self.jwtprovider_factory
+        );
 
-        match self.verifier.is_verified(&password_hash, &dto.password) {
-            Ok(true) => {}
-            Ok(false) => return self.map_none(WRONG_CREDENTIALS),
-            Err(e) => return self.handler_error(e),
-        };
-
-        let claims = match self.claims_provider.access_claims(&user) {
+        let token_pair_dto = match create_jwt_use_case.execute(dto.email.clone(), dto.password.clone()).await {
             Ok(v) => v,
-            Err(e) => return self.handler_error(e),
+            Err(e) => return self.handler_error(e)
         };
 
-        let refresh_claims = match self.claims_provider.refresh_claims(&user) {
-            Ok(v) => v,
-            Err(e) => return self.handler_error(e),
-        };
-
-        let access_token = match self.token_provider.generate_access(claims) {
-            Ok(v) => v,
-            Err(e) => return self.handler_error(e),
-        };
-
-        let refresh_token = match self.token_provider.generate_refresh(refresh_claims) {
-            Ok(v) => v,
-            Err(e) => return self.handler_error(e),
-        };
-
-        let token_pair_dto = TokenPairDto {
-            access_token,
-            refresh_token,
-        };
         Ok(LoginEmailPasResponseDto::Success {
             auth_data: token_pair_dto,
         })
@@ -89,11 +63,5 @@ where
             }),
             _ => Err(self.map_service_error(e)),
         }
-    }
-
-    fn map_none(&self, msg: &str) -> Result<LoginEmailPasResponseDto, String> {
-        Ok(LoginEmailPasResponseDto::Error {
-            err_msg: msg.to_string(),
-        })
     }
 }

@@ -36,13 +36,12 @@ pub struct HasuraClientManager;
 
 impl HasuraClientManager {
     fn create_hasura_client() -> Result<HasuraClient, HasuraClientError> {
-        let host = CredentialsProvider
+        let credentials = CredentialsProvider
             .get_credentials()
             .unwrap()
-            .hasura_url()
             .clone();
         let mut gql_client =
-            HasuraClient::new(host).map_err(|_| HasuraClientError::ErrorInitHasuraClient)?;
+            HasuraClient::new(credentials).map_err(|_| HasuraClientError::ErrorInitHasuraClient)?;
 
         let louder = GraphQLDLoader::new(&GQL_DIR);
         for filename in GQL_FILES {

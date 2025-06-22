@@ -2,6 +2,7 @@ use serde_json::Value;
 use std::collections::HashMap;
 
 use crate::domain::jwt::service::{JwtClaimsService as _, TokenService};
+use crate::domain::settings::model::Credentials;
 
 use super::errors::{HasuraClientError, HasuraErrorResponse};
 use super::gql_builder::GqlBuilder;
@@ -12,17 +13,18 @@ use super::jwt::token::TokenProvider;
 
 #[derive(Clone, Debug)]
 pub struct HasuraClient {
+    credentials: Credentials,
     collection: HashMap<String, GqlBuilder>,
     http: HttpClient,
 }
 
 impl HasuraClient {
-    pub fn new(host: String) -> Result<Self, HasuraClientError> {
-        let hasura_url: String = host.to_string();
+    pub fn new(credentials: Credentials) -> Result<Self, HasuraClientError> {
+        let hasura_url: String = credentials.hasura_url().clone();
 
         let mut srv = HttpClient::new(hasura_url);
 
-        let claims = ClaimsProvider
+        let claims = ClaimsProvider::new(credentials.clone())
             .inner_access_claims()
             .map_err(|_| HasuraClientError::CredentialsError)?;
         let token = TokenProvider
@@ -35,6 +37,7 @@ impl HasuraClient {
         srv.set_headers(header_list);
 
         Ok(Self {
+            credentials,
             collection: HashMap::new(),
             http: srv,
         })

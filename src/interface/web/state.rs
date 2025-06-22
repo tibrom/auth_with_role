@@ -7,19 +7,26 @@ use crate::infrastructure::jwt::token::TokenProvider;
 use crate::infrastructure::user::user_manager::{UserCommand, UserQuery};
 use crate::infrastructure::verifies::api_key_verifier::ApiKeyVerifier;
 use crate::infrastructure::verifies::password_verifier::PasswordVerifier;
+
+use crate::infrastructure::user::factory::UserProvider;
+use crate::infrastructure::verifies::factory::VerifiesProvider;
+use crate::infrastructure::jwt::factory::JWTProvider;
+
 use std::sync::Arc;
 
-type LoginUseCaseConcrete =
-    LoginWithEmailUseCase<UserQuery, PasswordVerifier, ClaimsProvider, TokenProvider>;
+type LoginUseCaseConcrete = LoginWithEmailUseCase<
+    JWTProvider,
+    VerifiesProvider,
+    UserProvider
+>;
 
 type SignUpUseCaseConcrete =
     SignUpWithEmailUseCase<UserCommand, PasswordVerifier, CredentialsProvider>;
 
 type LoginApiKeyUseCaseConcrete = LoginApiKeyUseCase<
-    UserQuery,
-    ApiKeyVerifier,
-    ClaimsProvider,
-    TokenProvider,
+    JWTProvider,
+    VerifiesProvider,
+    UserProvider,
 >;
 
 type CreateApiKeyUseCaseConcrete = CreateApiKeyUseCase<

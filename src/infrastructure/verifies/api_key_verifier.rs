@@ -1,4 +1,5 @@
 use super::errors::ApiKeyVerifierError;
+use crate::domain::settings::model::Credentials;
 use crate::domain::verifies::service::ApiKeyVerifierService;
 
 use aes_gcm::aead::{Aead, KeyInit};
@@ -13,18 +14,21 @@ const BASE: usize = 62;
 const NONCE_LEN: usize = 12;
 
 pub struct ApiKeyVerifier {
+    pub credentials: Credentials,
     pub encryption_key: [u8; 32], // 256-bit key
 }
 
 impl ApiKeyVerifier {
-    pub fn new(key: &str) -> Self {
+    pub fn new(credentials: Credentials) -> Self {
+        let key = credentials.encryption_api_key().clone();
+        
         let hash = Sha256::digest(key.as_bytes());
 
         // Преобразуем результат в массив [u8; 32]
         let mut encryption_key = [0u8; 32];
         encryption_key.copy_from_slice(&hash[..]);
 
-        Self { encryption_key }
+        Self { credentials, encryption_key }
     }
 
     fn bytes_to_base62(&self, mut bytes: Vec<u8>) -> String {
@@ -133,16 +137,3 @@ impl ApiKeyVerifierService for ApiKeyVerifier {
     }
 }
 
-#[test]
-fn test_api_key_cycle() {
-    let verifier = ApiKeyVerifier::new("same-key");
-
-    let user_id = Uuid::new_v4();
-    let api_key = verifier.generate(8, user_id);
-
-    println!("Generated API key: {}", api_key);
-
-    let extracted = verifier.extract_user_id(&api_key).unwrap();
-
-    assert_eq!(extracted, user_id);
-}

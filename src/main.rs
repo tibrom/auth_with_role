@@ -14,6 +14,10 @@ use crate::infrastructure::user::user_manager::{UserCommand, UserQuery};
 use crate::infrastructure::verifies::api_key_verifier::ApiKeyVerifier;
 use crate::infrastructure::verifies::password_verifier::PasswordVerifier;
 
+use crate::infrastructure::verifies::factory::VerifiesProvider;
+use crate::infrastructure::jwt::factory::JWTProvider;
+use crate::infrastructure::user::factory::UserProvider;
+
 use actix_web::{web, App, HttpServer};
 use interface::web::routes::auth::createapikey;
 use interface::web::routes::auth::{login, loginapikey};
@@ -29,8 +33,11 @@ async fn main() -> std::io::Result<()> {
         .get_credentials()
         .expect("CredentialsManager not allowed");
 
-    let login_use_case =
-        LoginWithEmailUseCase::new(UserQuery, PasswordVerifier, ClaimsProvider, TokenProvider);
+    let login_use_case = LoginWithEmailUseCase::new(
+        JWTProvider::new(credentials.clone()),
+        VerifiesProvider::new(credentials.clone()),
+        UserProvider
+    );
 
     let sing_up_use_case =
         SignUpWithEmailUseCase::new(UserCommand, PasswordVerifier, CredentialsProvider);
@@ -39,15 +46,14 @@ async fn main() -> std::io::Result<()> {
         UserCommand,
         UserQuery,
         PasswordVerifier,
-        ApiKeyVerifier::new(credentials.encryption_api_key()),
+        ApiKeyVerifier::new(credentials.clone()),
         CredentialsProvider,
     );
 
     let login_api_key_use_case = LoginApiKeyUseCase::new(
-        UserQuery,
-        ApiKeyVerifier::new(credentials.encryption_api_key()),
-        ClaimsProvider,
-        TokenProvider,
+        JWTProvider::new(credentials.clone()),
+        VerifiesProvider::new(credentials.clone()),
+        UserProvider
     );
 
     let app_state = AppState {
