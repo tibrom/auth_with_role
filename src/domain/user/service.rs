@@ -22,4 +22,6 @@ pub trait CommandUserService {
         allowed_roles: AllowedRoles,
     ) -> Result<UserWithRole, Self::Error>;
     async fn add_api_hash(&self, id: &str, api_hash: &str) -> Result<UserWithRole, Self::Error>;
+
+    async fn set_default_role(&self, user_with_role: UserWithRole) -> Result<UserWithRole, Self::Error>;
 }

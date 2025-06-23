@@ -8,11 +8,11 @@ use crate::domain::verifies::factories::VerifiesProviderFactory;
 use crate::domain::user::factories::UserProviderFactory;
 
 use super::error::AuthenticatorError;
-use super::error_dto::AuthErrorDTO;
+use super::error_dto::ComponentErrorDTO;
 use super::dto::TokenPairDto;
 
 
-pub struct CreateJwtWithApiKeyUseCase<Q, A, CP, TP> {
+pub struct CreateJwtWithApiKeySubCase<Q, A, CP, TP> {
     query_user_service: Q,
     api_key_verifier: A,
     claims_provider: CP,
@@ -20,7 +20,7 @@ pub struct CreateJwtWithApiKeyUseCase<Q, A, CP, TP> {
 }
 
 
-impl<Q, A, CP, TP> CreateJwtWithApiKeyUseCase<Q, A, CP, TP>
+impl<Q, A, CP, TP> CreateJwtWithApiKeySubCase<Q, A, CP, TP>
 where
     Q: QueryUserService,
     A: ApiKeyVerifierService,
@@ -100,6 +100,6 @@ where
 
 
     fn infrastructure_error(&self, e: &dyn AppErrorInfo) -> Result<TokenPairDto, AuthenticatorError> {
-        Err(AuthenticatorError::InfrastructureError(AuthErrorDTO::new(e.level(), e.log_message(), e.client_message())))
+        Err(AuthenticatorError::InfrastructureError(ComponentErrorDTO::new(e.level(), e.log_message(), e.client_message())))
     }
 }

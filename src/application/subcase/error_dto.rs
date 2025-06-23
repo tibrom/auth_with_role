@@ -5,13 +5,13 @@ use crate::domain::errors::service::{AppErrorInfo, ErrorLevel};
 
 
 #[derive(Debug, Clone)]
-pub struct AuthErrorDTO {
+pub struct ComponentErrorDTO {
     level: ErrorLevel,
     log_message: String,
     client_message: String
 }
 
-impl AuthErrorDTO {
+impl ComponentErrorDTO {
     pub fn new(
         level: ErrorLevel,
         log_message: String,
@@ -21,7 +21,7 @@ impl AuthErrorDTO {
     }
 }
 
-impl From<&dyn AppErrorInfo> for AuthErrorDTO {
+impl From<&dyn AppErrorInfo> for ComponentErrorDTO {
     fn from(value: &dyn AppErrorInfo) -> Self {
         Self { 
             level: value.level(),
@@ -31,7 +31,7 @@ impl From<&dyn AppErrorInfo> for AuthErrorDTO {
     }
 }
 
-impl AppErrorInfo for AuthErrorDTO {
+impl AppErrorInfo for ComponentErrorDTO {
     fn client_message(&self) -> String {
         self.client_message.clone()
     }

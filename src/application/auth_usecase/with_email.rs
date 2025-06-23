@@ -6,7 +6,7 @@ use crate::domain::jwt::factories::JWTProviderFactory;
 use crate::domain::user::factories::UserProviderFactory;
 use crate::domain::verifies::factories::VerifiesProviderFactory;
 
-use super::authenticators::with_email::CreateJwtWithEmailPasswdUseCase;
+use super::subcase::authenticators::with_email::CreateJwtWithEmailPasswdSubCase;
 
 
 pub struct LoginWithEmailUseCase<J, V, U> {
@@ -40,13 +40,13 @@ where
         dto: LoginEmailPasRequestDto,
     ) -> Result<LoginEmailPasResponseDto, String> {
 
-        let create_jwt_use_case = CreateJwtWithEmailPasswdUseCase::new(
+        let create_jwt_sub_case = CreateJwtWithEmailPasswdSubCase::new(
             &self.user_provider_factory,
             &self.verifies_provider_factory,
             &self.jwtprovider_factory
         );
 
-        let token_pair_dto = match create_jwt_use_case.execute(dto.email.clone(), dto.password.clone()).await {
+        let token_pair_dto = match create_jwt_sub_case.execute(dto.email.clone(), dto.password.clone()).await {
             Ok(v) => v,
             Err(e) => return self.handler_error(e)
         };

@@ -1,4 +1,5 @@
 
+use crate::domain::settings::model::Credentials;
 use crate::domain::user::model::{AllowedRoles, UserNameEmailPasswordHash, UserWithRole};
 use crate::domain::user::service::{CommandUserService, QueryUserService};
 
@@ -28,7 +29,15 @@ pub struct HasuraAllowedRoles {
     pub roles: Vec<AllowedRoles>,
 }
 
-pub struct UserCommand;
+pub struct UserCommand{
+    credentials: Credentials,
+}
+
+impl UserCommand {
+    pub fn new(credentials: Credentials) -> Self {
+        Self { credentials }
+    }
+}
 
 impl CommandUserService for UserCommand {
     type Error = UserManagerError;
@@ -59,6 +68,41 @@ impl CommandUserService for UserCommand {
             Some(user) => Ok(user.clone()),
             None => Err(UserManagerError::FailedCreateUser),
         }
+    }
+
+
+    async fn set_default_role(
+        &self,
+        mut user: UserWithRole,
+    ) -> Result<UserWithRole, Self::Error> {
+        let client = HasuraClientManager::get_hasura_client()
+            .await
+            .map_err(|e| UserManagerError::HasuraClientError(e))?;
+
+        let default_role = self.credentials.new_user_role().with_email().clone();
+
+        let variables = serde_json::json!(
+            {
+                "role": default_role,
+                "user_id": user.id().clone(),
+                "is_default": true
+            }
+        );
+        let value = client
+            .execute(CREATE_ALLOWED_ROLES, variables)
+            .await
+            .map_err(|e| UserManagerError::HasuraClientError(e))?;
+
+        let parsed_result: HasuraCreatedRoles = serde_json::from_value(value)
+            .map_err(|e| UserManagerError::ResponseJsonParseError(e))?;
+
+        let Some(new_role) = parsed_result.new.roles.first() else {
+            return Err(UserManagerError::FailedCreateAllowedRoles);
+        };
+
+        user.add_role(new_role);
+
+        Ok(user)
     }
 
     async fn add_role(

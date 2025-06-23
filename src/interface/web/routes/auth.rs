@@ -1,5 +1,5 @@
-use crate::application::auth::dto::CreateApiKeyRequestDto;
-use crate::application::auth::dto::{
+use crate::application::auth_usecase::dto::CreateApiKeyRequestDto;
+use crate::application::auth_usecase::dto::{
     LoginApiKeyRequestDto, LoginEmailPasRequestDto,
 };
 use crate::interface::web::state::AppState;

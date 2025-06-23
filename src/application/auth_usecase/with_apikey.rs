@@ -12,42 +12,31 @@ use crate::domain::jwt::factories::JWTProviderFactory;
 use crate::domain::verifies::factories::VerifiesProviderFactory;
 use crate::domain::user::factories::UserProviderFactory;
 
-use super::authenticators::with_apikey::CreateJwtWithApiKeyUseCase;
+use super::subcase::authenticators::with_apikey::CreateJwtWithApiKeySubCase;
+use super::subcase::user_attribute::api_key::CreateApiKeyByEmailPasswdSubCase;
 
 
 const WRONG_CREDENTIALS: &str = "Incorrect login or password";
 
-pub struct CreateApiKeyUseCase<U, Q, V, A, C> {
-    user_service: U,
-    query_user_service: Q,
-    password_verifier: V,
-    api_key_verifier: A,
-    credentials_provider: C,
+pub struct CreateApiKeyUseCase<V, U> {
+    verifies_provider_factory: V,
+    user_provider_factory: U,
 }
 
-impl<U, Q, V, A, C> ServiceErrorExt for CreateApiKeyUseCase<U, Q, V, A, C> {}
+impl<V, U> ServiceErrorExt for CreateApiKeyUseCase<V, U> {}
 
-impl<U, Q, V, A, C> CreateApiKeyUseCase<U, Q, V, A, C>
+impl<V, U> CreateApiKeyUseCase<V, U>
 where
-    U: CommandUserService,
-    Q: QueryUserService,
-    V: PasswordVerifierService,
-    A: ApiKeyVerifierService,
-    C: CredentialsService,
+    V: VerifiesProviderFactory,
+    U: UserProviderFactory
 {
     pub fn new(
-        user_service: U,
-        query_user_service: Q,
-        password_verifier: V,
-        api_key_verifier: A,
-        credentials_provider: C,
+        verifies_provider_factory: V,
+        user_provider_factory: U,
     ) -> Self {
         Self {
-            user_service,
-            query_user_service,
-            password_verifier,
-            api_key_verifier,
-            credentials_provider,
+            verifies_provider_factory,
+            user_provider_factory
         }
     }
 
@@ -55,48 +44,18 @@ where
         &self,
         dto: CreateApiKeyRequestDto,
     ) -> Result<CreateApiKeyResponseDto, String> {
-        let user = match self.query_user_service.get_user_by_email(&dto.email).await {
-            Ok(Some(user)) => user,
-            Ok(None) => return self.map_none(WRONG_CREDENTIALS),
-            Err(e) => return self.handler_error(e),
-        };
+        let create_api_key_sub_case = CreateApiKeyByEmailPasswdSubCase::new(
+            &self.user_provider_factory,
+            &self.verifies_provider_factory
+        );
 
-        let Some(password_hash) = user.password_hash() else {
-            return self.map_none(WRONG_CREDENTIALS);
-        };
-
-        match self
-            .password_verifier
-            .is_verified(&password_hash, &dto.password)
-        {
-            Ok(true) => {}
-            Ok(false) => return self.map_none(WRONG_CREDENTIALS),
-            Err(e) => return self.handler_error(e),
-        };
-
-        let api_key_length = match self.credentials_provider.get_credentials() {
-            Ok(v) => v.api_key_length().clone(),
-            Err(e) => return self.handler_error(e),
-        };
-
-        let api_key = self
-            .api_key_verifier
-            .generate(api_key_length, user.id().clone());
-
-        let api_key_hash = match self.api_key_verifier.create_hash(&api_key) {
+        let api_key = match create_api_key_sub_case.execute(dto.email.clone(), dto.password).await {
             Ok(v) => v,
-            Err(e) => return self.handler_error(e),
+            Err(e) => return self.handler_error(e)
         };
 
-        if let Err(e) = self
-            .user_service
-            .add_api_hash(&user.id().to_string(), &api_key_hash)
-            .await
-        {
-            return self.handler_error(e);
-        };
 
-        Ok(CreateApiKeyResponseDto::Success { api_key })
+        Ok(CreateApiKeyResponseDto::Success { auth_data: api_key })
     }
 
 
@@ -107,12 +66,6 @@ where
             }),
             _ => Err(self.map_service_error(e)),
         }
-    }
-
-    fn map_none(&self, msg: &str) -> Result<CreateApiKeyResponseDto, String> {
-        Ok(CreateApiKeyResponseDto::Error {
-            err_msg: msg.to_string(),
-        })
     }
 }
 
@@ -146,7 +99,7 @@ where
         dto: LoginApiKeyRequestDto,
     ) -> Result<LoginApiKeyResponseDto, String> {
 
-        let create_jwt_use_case = CreateJwtWithApiKeyUseCase::new(
+        let create_jwt_use_case = CreateJwtWithApiKeySubCase::new(
             &self.user_provider_factory,
             &self.verifies_provider_factory,
             &self.jwtprovider_factory

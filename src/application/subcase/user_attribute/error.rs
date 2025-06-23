@@ -1,11 +1,11 @@
 use thiserror::Error;
-use super::error_dto::AuthErrorDTO;
+use super::error_dto::ComponentErrorDTO;
 use crate::domain::errors::service::{AppErrorInfo, ErrorLevel};
 
 #[derive(Debug, Error)]
-pub enum AuthenticatorError {
+pub enum UserAttributeError {
     #[error("Infrastructure Error")]
-    InfrastructureError(AuthErrorDTO),
+    InfrastructureError(ComponentErrorDTO),
     #[error("User not found by {0}")]
     UserNotFound(String),
     #[error("User not found by {0}")]
@@ -20,7 +20,7 @@ pub enum AuthenticatorError {
 
 }
 
-impl AuthenticatorError {
+impl UserAttributeError {
     fn error_level(&self) -> ErrorLevel {
         ErrorLevel::Info
     }
@@ -29,10 +29,10 @@ impl AuthenticatorError {
     }
 }
 
-impl AppErrorInfo for AuthenticatorError {
+impl AppErrorInfo for UserAttributeError {
     fn client_message(&self) -> String {
         match self {
-            AuthenticatorError::InfrastructureError(e) => {
+            UserAttributeError::InfrastructureError(e) => {
                 e.client_message()
             }
             _ => self.msg_not_correct_credentials()
@@ -41,7 +41,7 @@ impl AppErrorInfo for AuthenticatorError {
 
     fn level(&self) -> ErrorLevel {
         match self {
-            AuthenticatorError::InfrastructureError(e) => {
+            UserAttributeError::InfrastructureError(e) => {
                 e.level()
             }
             _ => {
@@ -51,22 +51,22 @@ impl AppErrorInfo for AuthenticatorError {
     }
     fn log_message(&self) -> String {
         match self {
-            AuthenticatorError::UserNotFound(v) => {
+            UserAttributeError::UserNotFound(v) => {
                 format!("User not found by: {}", v)
             }
-            AuthenticatorError::ApiKeyAuthenticatorNotAllowed(user_id) => {
+            UserAttributeError::ApiKeyAuthenticatorNotAllowed(user_id) => {
                 format!("User {} doesn't have api key", user_id)
             }
-            AuthenticatorError::NotCorrectApiKey => {
+            UserAttributeError::NotCorrectApiKey => {
                 format!("Try create JWT with not correct api key")
             }
-            AuthenticatorError::NotCorrectPassword => {
+            UserAttributeError::NotCorrectPassword => {
                 format!("Try create JWT with not correct password")
             }
-            AuthenticatorError::EmailPasswdAuthNotAllowed(v) => {
+            UserAttributeError::EmailPasswdAuthNotAllowed(v) => {
                 format!("User doesn't have email or password. Authentications not allowed for this user {}", v)
             }
-            AuthenticatorError::InfrastructureError(e) => {
+            UserAttributeError::InfrastructureError(e) => {
                 e.log_message()
             }
         }

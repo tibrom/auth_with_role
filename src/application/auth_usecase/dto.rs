@@ -1,4 +1,5 @@
-use super::authenticators::dto::TokenPairDto;
+use super::subcase::authenticators::dto::TokenPairDto;
+use super::subcase::user_attribute::dto::ApiKeyDto;
 
 #[derive(Debug, Clone, serde::Deserialize, serde::Serialize, PartialEq)]
 pub struct LoginEmailPasRequestDto {
@@ -22,7 +23,7 @@ pub struct CreateApiKeyRequestDto {
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 #[serde(tag = "status", rename_all = "lowercase")] // JSON: "success", "error"
 pub enum CreateApiKeyResponseDto {
-    Success { api_key: String },
+    Success { auth_data: ApiKeyDto },
     Error { err_msg: String },
 }
 

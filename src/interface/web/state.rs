@@ -1,6 +1,6 @@
-use crate::application::auth::with_apikey::{CreateApiKeyUseCase, LoginApiKeyUseCase};
-use crate::application::auth::with_email::LoginWithEmailUseCase;
-use crate::application::sign_up::with_email::SignUpWithEmailUseCase;
+use crate::application::auth_usecase::with_apikey::{CreateApiKeyUseCase, LoginApiKeyUseCase};
+use crate::application::auth_usecase::with_email::LoginWithEmailUseCase;
+use crate::application::sign_up_usecase::with_email::SignUpWithEmailUseCase;
 use crate::infrastructure::config::credentials_provider::CredentialsProvider;
 use crate::infrastructure::jwt::claims::ClaimsProvider;
 use crate::infrastructure::jwt::token::TokenProvider;
@@ -21,7 +21,7 @@ type LoginUseCaseConcrete = LoginWithEmailUseCase<
 >;
 
 type SignUpUseCaseConcrete =
-    SignUpWithEmailUseCase<UserCommand, PasswordVerifier, CredentialsProvider>;
+    SignUpWithEmailUseCase<VerifiesProvider, UserProvider>;
 
 type LoginApiKeyUseCaseConcrete = LoginApiKeyUseCase<
     JWTProvider,
@@ -30,11 +30,8 @@ type LoginApiKeyUseCaseConcrete = LoginApiKeyUseCase<
 >;
 
 type CreateApiKeyUseCaseConcrete = CreateApiKeyUseCase<
-    UserCommand,
-    UserQuery,
-    PasswordVerifier,
-    ApiKeyVerifier,
-    CredentialsProvider,
+    VerifiesProvider,
+    UserProvider,
 >;
 
 #[derive(Clone)]
@@ -44,3 +41,4 @@ pub struct AppState {
     pub create_apikey_use_case: Arc<CreateApiKeyUseCaseConcrete>,
     pub login_api_key_use_case: Arc<LoginApiKeyUseCaseConcrete>,
 }
+

@@ -93,10 +93,11 @@ impl ApiKeyVerifier {
 impl ApiKeyVerifierService for ApiKeyVerifier {
     type Error = ApiKeyVerifierError;
 
-    fn generate(&self, length: u16, user_id: Uuid) -> String {
+    fn generate(&self, user_id: Uuid) -> String {
+
         let encrypted_uuid = self.encrypt_uuid(user_id).expect("UUID encryption failed");
 
-        let random_len = length as usize;
+        let random_len = *self.credentials.api_key_length() as usize;
         let mut random_part = String::new();
 
         while random_part.len() < random_len {

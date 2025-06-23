@@ -8,12 +8,13 @@ pub struct SignUpRequestDto {
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 #[serde(tag = "status", rename_all = "lowercase")] // JSON: "success", "error"
 pub enum SignUpResponseDto {
-    Success { user: UserDataPairDto },
+    Success { user: UserDataDto },
     Error { err_msg: String },
 }
 
 #[derive(Debug, Clone, serde::Deserialize, serde::Serialize, PartialEq)]
-pub struct UserDataPairDto {
+pub struct UserDataDto {
     pub username: String,
     pub email: String,
 }
+
