@@ -1,56 +1,57 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, str::FromStr};
 use uuid::Uuid;
 
 use super::state::ConnectionState;
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum ConnectionType {
     Http,
     WebSocket,
+    Unknown,
 }
-
-
-pub type HeaderMap = HashMap<String, String>;
-
 
 #[derive(getset::Getters, getset::Setters, Debug, Clone, PartialEq)]
 pub struct ConnectionContext {
     #[get = "pub"]
     id: Uuid,
     #[get = "pub"]
-    connection_type: ConnectionType,
-    #[get = "pub"]
-    target_url: String,
-    #[get = "pub"]
     auth_data: AuthData,
     #[get = "pub"]
     state: ConnectionState,
+    #[get = "pub"]
+    access_token: Option<String>,
+    #[get = "pub"]
+    connection_type: ConnectionType
 }
 
 impl ConnectionContext {
     pub fn new(
-        target_url: String,
-        connection_type: ConnectionType,
-        client_headers: HeaderMap,
-        auth_data: AuthData
+        auth_data: AuthData,
+        connection_type: ConnectionType
     ) -> Self {
+        let id = Uuid::new_v4();
         Self {
-            id: Uuid::new_v4(),
-            connection_type,
-            target_url,
+            id: id.clone(),
             auth_data,
-            state: ConnectionState::Initial
+            state: ConnectionState::Initial,
+            access_token: None,
+            connection_type
         }
-    }
+        }
 
-    pub fn new_state(&mut self, state: ConnectionState) {
+    pub fn set_state(&mut self, state: ConnectionState) {
         self.state = state
+    }
+    pub fn set_access_token(&mut self, token: String) {
+        self.access_token = Some(token)
     }
 }
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum AuthData {
-    ApiKey(String)
+    ApiKey(String),
+    None
 }
+
 
 

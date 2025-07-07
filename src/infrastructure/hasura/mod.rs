@@ -1,10 +1,6 @@
 pub mod client;
+pub mod error;
+pub mod gql_descriptor;
 pub mod client_manager;
-pub mod errors;
 
-mod gql_builder;
 mod http_client;
-mod query_loader;
-
-use super::config;
-use super::jwt;

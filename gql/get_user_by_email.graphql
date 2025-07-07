@@ -1,5 +1,5 @@
-query get_user_by_email($email: String = "") {
-  user:users_user(where: {email: {_eq: $email}}) {
+query GetUserByEmail($email: String = "") {
+  users:users_user(where: {email: {_eq: $email}}) {
     updated_at
     telegram_id
     username

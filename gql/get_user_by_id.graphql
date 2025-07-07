@@ -1,5 +1,5 @@
-query get_user_by_id($id: uuid = "") {
-  user:users_user(where: {id: {_eq: $id}}) {
+query GetUserById($id: uuid = "") {
+  users:users_user(where: {id: {_eq: $id}}) {
     updated_at
     telegram_id
     username

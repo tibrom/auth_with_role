@@ -1,5 +1,5 @@
 query UserByTgIdQuery($tg_id: bigint = "") {
-  user:users_user(where: {tg_id: {_eq: $tg_id}}) {
+  users:users_user(where: {tg_id: {_eq: $tg_id}}) {
     created_at
     email
     id

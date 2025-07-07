@@ -1,3 +1,5 @@
+use std::str::FromStr;
+
 use super::errors::ApiKeyVerifierError;
 use crate::domain::settings::model::Credentials;
 use crate::domain::verifies::service::ApiKeyVerifierService;
@@ -21,6 +23,7 @@ pub struct ApiKeyVerifier {
 impl ApiKeyVerifier {
     pub fn new(credentials: Credentials) -> Self {
         let key = credentials.encryption_api_key().clone();
+        println!("key {:?}", key);
         
         let hash = Sha256::digest(key.as_bytes());
 
@@ -47,7 +50,7 @@ impl ApiKeyVerifier {
         result
     }
 
-    fn encrypt_uuid(&self, uuid: Uuid) -> Result<String, ApiKeyVerifierError> {
+    fn encrypt_data(&self, value: String) -> Result<String, ApiKeyVerifierError> {
         let key = Key::<Aes256Gcm>::from_slice(&self.encryption_key);
         let cipher = Aes256Gcm::new(key);
 
@@ -56,7 +59,7 @@ impl ApiKeyVerifier {
         let nonce = Nonce::from_slice(&nonce_bytes);
 
         let ciphertext = cipher
-            .encrypt(nonce, uuid.as_bytes().as_ref())
+            .encrypt(nonce, value.as_bytes().as_ref())
             .map_err(|e| ApiKeyVerifierError::EncryptionError(e.to_string()))?;
 
         let mut data = nonce_bytes.to_vec();
@@ -65,9 +68,9 @@ impl ApiKeyVerifier {
         Ok(general_purpose::STANDARD_NO_PAD.encode(data))
     }
 
-    fn decrypt_uuid(&self, token: &str) -> Result<Uuid, ApiKeyVerifierError> {
+    fn decrypt_data(&self, value: &str) -> Result<String, ApiKeyVerifierError> {
         let data = general_purpose::STANDARD_NO_PAD
-            .decode(token)
+            .decode(value)
             .map_err(|e| ApiKeyVerifierError::DecryptionError(e.to_string()))?;
 
         if data.len() < NONCE_LEN {
@@ -85,8 +88,11 @@ impl ApiKeyVerifier {
             .decrypt(nonce, ciphertext)
             .map_err(|e| ApiKeyVerifierError::DecryptionError(e.to_string()))?;
 
-        Uuid::from_slice(&decrypted)
-            .map_err(|e| ApiKeyVerifierError::DecryptionError(e.to_string()))
+        let result = String::from_utf8(decrypted)
+            .map_err(|e| ApiKeyVerifierError::DecryptionError(e.to_string()))?;
+
+        Ok(result)
+        
     }
 }
 
@@ -94,8 +100,6 @@ impl ApiKeyVerifierService for ApiKeyVerifier {
     type Error = ApiKeyVerifierError;
 
     fn generate(&self, user_id: Uuid) -> String {
-
-        let encrypted_uuid = self.encrypt_uuid(user_id).expect("UUID encryption failed");
 
         let random_len = *self.credentials.api_key_length() as usize;
         let mut random_part = String::new();
@@ -106,17 +110,24 @@ impl ApiKeyVerifierService for ApiKeyVerifier {
             random_part.push_str(&self.bytes_to_base62(buffer.to_vec()));
         }
 
+        println!("random_part {:?}", random_part);
         random_part.truncate(random_len);
 
-        format!("{}-{}", encrypted_uuid, random_part)
+        let value = format!("{}={}", user_id, random_part);
+
+        self.encrypt_data(value).expect("UUID encryption failed")
     }
 
     fn extract_user_id(&self, api_key: &str) -> Result<Uuid, Self::Error> {
-        let encrypted_part = api_key.split('-').next().ok_or_else(|| {
+        let encrypted_api_key = self.decrypt_data(api_key)?;
+
+        let user_id_str = encrypted_api_key.split('=').next().ok_or_else(|| {
             ApiKeyVerifierError::DecryptionError("Token format invalid".to_string())
         })?;
 
-        self.decrypt_uuid(encrypted_part)
+        
+        Uuid::from_str(user_id_str)
+            .map_err(|e| ApiKeyVerifierError::DecryptionError(e.to_string()))
     }
 
     fn is_verified(&self, api_key_hash: &str, api_key: &str) -> Result<bool, Self::Error> {

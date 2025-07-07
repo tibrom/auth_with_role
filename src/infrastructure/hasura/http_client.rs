@@ -2,6 +2,7 @@ use reqwest::{Method, Response};
 use std::time::{Duration, SystemTime};
 use uuid::Uuid;
 
+
 #[derive(Debug, Clone)]
 pub struct HttpClient {
     uri: String,

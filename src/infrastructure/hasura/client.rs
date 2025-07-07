@@ -1,60 +1,59 @@
+use include_dir::Dir;
+use serde::de::DeserializeOwned;
 use serde_json::Value;
-use std::collections::HashMap;
-
-use crate::domain::jwt::service::{JwtClaimsService as _, TokenService};
-use crate::domain::settings::model::Credentials;
-
-use super::errors::{HasuraClientError, HasuraErrorResponse};
-use super::gql_builder::GqlBuilder;
 use super::http_client::HttpClient;
+use super::error::HasuraClientError;
+use super::gql_descriptor::{ObjectGQLDescriptor, StaticGQLDescriptor};
+use crate::infrastructure::hasura::error::HasuraErrorResponse;
 
-use super::jwt::claims::ClaimsProvider;
-use super::jwt::token::TokenProvider;
 
+/// Клиент для взаимодействия с Hasura GraphQL API.
 #[derive(Clone, Debug)]
 pub struct HasuraClient {
-    credentials: Credentials,
-    collection: HashMap<String, GqlBuilder>,
+    hasura_url: String,
+    api_key: Option<String>,
     http: HttpClient,
 }
 
 impl HasuraClient {
-    pub fn new(credentials: Credentials) -> Result<Self, HasuraClientError> {
-        let hasura_url: String = credentials.hasura_url().clone();
+    /// Создаёт новый HasuraClient с заданным URL и (опциональным) API-ключом.
+    pub fn new(hasura_url: String, api_key: Option<String>) -> Self {
+        let mut srv = HttpClient::new(hasura_url.clone());
 
-        let mut srv = HttpClient::new(hasura_url);
-
-        let claims = ClaimsProvider::new(credentials.clone())
-            .inner_access_claims()
-            .map_err(|_| HasuraClientError::CredentialsError)?;
-        let token = TokenProvider
-            .generate_access(claims)
-            .map_err(|_| HasuraClientError::CredentialsError)?;
-        
         let mut header_list: Vec<(String, String)> = Vec::new();
-        header_list.push(("Authorization".to_string(), format!("Bearer {token}")));
         header_list.push(("content-type".to_string(), "application/json".to_string()));
+        if let Some(token) = api_key.clone() {
+            header_list.push(("Authorization".to_string(), format!("Bearer {token}")));
+        
+        }
         srv.set_headers(header_list);
 
-        Ok(Self {
-            credentials,
-            collection: HashMap::new(),
+        Self {
+            hasura_url,
+            api_key,
             http: srv,
-        })
+        }
     }
 
-    pub fn add_query(&mut self, operation_name: impl ToString, query: impl ToString) {
-        self.collection.insert(
-            operation_name.to_string(),
-            GqlBuilder::new(operation_name.to_string(), query.to_string()),
-        );
+    /// Читает GraphQL-запрос из файла в указанной директории.
+    fn read_query(&self, filename: &str, dir: Dir<'static>) -> Result<String, HasuraClientError> {
+        match dir.get_file(filename) {
+            Some(file) => {
+                let content = file
+                    .contents_utf8()
+                    .ok_or_else(|| HasuraClientError::FailedLoadQuery)?;
+                Ok(content.to_string())
+            }
+            None => Err(HasuraClientError::FailedLoadQuery),
+        }
     }
 
-    fn map_gql_error(result: Result<String, reqwest::Error>) -> Result<Value, HasuraClientError> {
-        let body = result.map_err(|e| HasuraClientError::HttpRequestError(e))?;
+    /// Обрабатывает ответ от Hasura и возвращает JSON-объект либо ошибку.
+    fn map_gql_error(&self, result: Result<String, reqwest::Error>) -> Result<Value, HasuraClientError> {
+        let body = result.map_err(HasuraClientError::HttpRequestError)?;
 
         let value = serde_json::from_str::<Value>(&body)
-            .map_err(|e| HasuraClientError::ResponseJsonParseError(e))?;
+            .map_err(|e| HasuraClientError::ResponseJsonParseError(e.to_string()))?;
 
         if let Some(e) = value.get("errors") {
             let top_level_error = e.get(0).unwrap();
@@ -69,27 +68,31 @@ impl HasuraClient {
         Ok(value)
     }
 
-    pub async fn execute(
-        &self,
-        operation_name: impl ToString,
-        variables: Value,
-    ) -> Result<Value, HasuraClientError> {
-        let operation_name = operation_name.to_string();
-        let Some(gql_builder) = self.collection.get(&operation_name) else {
-            return Err(HasuraClientError::GqlBuilderNotFound(operation_name));
-        };
-        let mut gql_builder = gql_builder.clone();
+    /// Универсальное выполнение GraphQL запроса.
+    ///
+    /// `D`: пользовательская структура, реализующая оба трейта:
+    /// - `StaticGQLDescriptor` — описывает мета-данные о GQL-файле.
+    /// - `ObjectGQLDescriptor<T>` — описывает переменные и десериализацию.
+    pub async fn execute<D, T>(&self, descriptor: &D) -> Result<T, HasuraClientError>
+    where
+        D: StaticGQLDescriptor + ObjectGQLDescriptor,
+        T: DeserializeOwned {
+            let dir = D::path();
+            let filename = D::filename();
+            let operation_name = D::operation_name();
+            let query = self.read_query(filename, dir)?;
 
-        if let Some(vars) = variables.as_object() {
-            for (k, v) in vars {
-                gql_builder = gql_builder.variables_add(k.clone(), v.clone());
-            }
+            let value = serde_json::json!({
+                "operationName": operation_name,
+                "query": query,
+                "variables": descriptor.variables()
+            });
+
+            let http_result = self.http.clone().post(value.to_string()).await;
+            let result_value = self.map_gql_error(http_result)?;
+
+            let result: T = serde_json::from_value(result_value["data"].clone()).map_err(|e| e.to_string())
+                .map_err(HasuraClientError::ResponseJsonParseError)?;
+            Ok(result)
         }
-
-        let query = gql_builder.build();
-        let result = self.http.clone().post(query).await;
-
-        let mut value = Self::map_gql_error(result)?;
-        Ok(value["data"].take())
-    }
 }

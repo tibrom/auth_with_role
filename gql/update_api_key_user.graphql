@@ -1,5 +1,5 @@
-mutation update_api_key_user($user_id: uuid, $aip_key_hash: String = "") {
-  new: update_users_user(_set: {aip_key_hash: $aip_key_hash}, where: {id: {_eq: $user_id}}) {
+mutation UpdateApiKeyUser($user_id: uuid, $api_key_hash: String = "") {
+  update_users_user(_set: {api_key_hash: $api_key_hash}, where: {id: {_eq: $user_id}}) {
     user:returning {
       updated_at
     telegram_id

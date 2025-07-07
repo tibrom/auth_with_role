@@ -19,6 +19,8 @@ pub struct Credentials {
     #[get = "pub"]
     hasura_url: String,
     #[get = "pub"]
+    hasura_ws_url: String,
+    #[get = "pub"]
     hasura_credentials: HasuraCredentials,
     #[get = "pub"]
     new_user_role: NewUserRole,

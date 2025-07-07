@@ -1,4 +1,5 @@
 use crate::domain::errors::service::{AppErrorInfo, ErrorLevel};
+use super::super::hasura::error::HasuraClientError;
 use thiserror::Error;
 
 /// Основная ошибка GraphQL клиента (обёртка)
@@ -8,7 +9,7 @@ pub enum UserManagerError {
     ResponseJsonParseError(#[from] serde_json::Error),
 
     #[error("HTTP request failed: {0}")]
-    HasuraClientError(#[from] super::hasura::errors::HasuraClientError),
+    HasuraClientError(#[from] HasuraClientError),
 
     #[error("User not found")]
     UserNotFound,

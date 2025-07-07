@@ -1,5 +1,5 @@
-mutation create_user($password_hash: String, $username: String, $email: String) {
-  new:insert_users_user(objects: {password_hash: $password_hash, aip_key_hash: null, telegram_id: null, username: $username, first_name: null, last_name: null, email: $email}) {
+mutation CreateUser($password_hash: String, $username: String, $email: String) {
+  insert_users_user(objects: {password_hash: $password_hash, aip_key_hash: null, telegram_id: null, username: $username, first_name: null, last_name: null, email: $email}) {
     user:returning {
       updated_at
     telegram_id
