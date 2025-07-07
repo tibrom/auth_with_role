@@ -1,4 +1,4 @@
-use crate::application::sign_up_usecase::dto::SignUpRequestDto;
+use crate::application::usecase::sign_up_usecase::dto::SignUpRequestDto;
 use crate::interface::web::state::AppState;
 use actix_web::{post, web, HttpResponse, Responder};
 

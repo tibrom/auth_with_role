@@ -5,7 +5,7 @@ mod interface;
 
 use crate::application::usecase::auth_usecase::with_apikey::{CreateApiKeyUseCase, LoginApiKeyUseCase};
 use crate::application::usecase::auth_usecase::with_email::LoginWithEmailUseCase;
-use crate::application::sign_up_usecase::with_email::SignUpWithEmailUseCase;
+use crate::application::usecase::sign_up_usecase::with_email::SignUpWithEmailUseCase;
 use crate::domain::settings::service::CredentialsService as _;
 use crate::infrastructure::config::credentials_provider::CredentialsProvider;
 
