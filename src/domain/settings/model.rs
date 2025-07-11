@@ -19,16 +19,41 @@ pub struct Credentials {
     #[get = "pub"]
     hasura_url: String,
     #[get = "pub"]
-    hasura_ws_url: String,
-    #[get = "pub"]
     hasura_credentials: HasuraCredentials,
     #[get = "pub"]
     new_user_role: NewUserRole,
     #[get = "pub"]
     api_key_length: u16,
-    #[get = "pub"]
-    encryption_api_key: String,
 }
+
+impl Credentials {
+    pub fn mock() -> Self {
+        let new_user_role = NewUserRole{
+            with_email: "TEST".to_string(),
+            with_telegram: "@TEST".to_string()
+        };
+
+        let hasura_credentials = HasuraCredentials {
+            x_hasura_default_role: "TEST".to_string(),
+            exp: 1,
+            x_hasura_user_id: "TEST".to_string()
+        };
+        Self { 
+            host: "TEST_HOST".to_string(),
+            port: 100,
+            expiration_access_hours: 100,
+            expiration_refresh_hours: 100,
+            access_secret: "TEST_ACCESS".to_string(),
+            refresh_secret: "REFRESH_TEST".to_string(),
+            hasura_url: "URL".to_string(),
+            hasura_credentials,
+            new_user_role,
+            api_key_length: 32
+        }
+
+    }
+}
+
 
 #[derive(
     Getters, Setters, Debug, Clone, serde::Deserialize, serde::Serialize, PartialEq, Default,

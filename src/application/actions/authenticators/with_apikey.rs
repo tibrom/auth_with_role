@@ -56,19 +56,17 @@ where
         api_key: String
     ) -> Result<TokenPairDto, AuthenticatorError> {
         
-        let user_id = match self.api_key_verifier.extract_user_id(&api_key) {
-            Ok(v) => v,
-            Err(e) => return self.infrastructure_error(&e)
-        };
+        let identifier = self.api_key_verifier.extract_identifier(&api_key)
+            .map_err(|e| Self::map_infrastructure_error(&e))?;
             
-        let user = match self.query_user_service.get_user_by_id(&user_id.to_string()).await {
+        let user = match self.query_user_service.get_user_by_identifier(&identifier).await {
             Ok(Some(v)) => v,
             Ok(None) => return Err(AuthenticatorError::UserNotFound(api_key)),
             Err(e) => return self.infrastructure_error(&e)
         };
 
-        let Some(api_key_hash) = user.aip_key_hash() else {
-            return Err(AuthenticatorError::ApiKeyAuthenticatorNotAllowed(user_id.to_string()))
+        let Some(api_key_hash) = user.secret() else {
+            return Err(AuthenticatorError::ApiKeyAuthenticatorNotAllowed(identifier))
         };
 
         let is_verified = match self
@@ -104,4 +102,9 @@ where
     fn infrastructure_error(&self, e: &dyn AppErrorInfo) -> Result<TokenPairDto, AuthenticatorError> {
         Err(AuthenticatorError::InfrastructureError(ComponentErrorDTO::new(e.level(), e.log_message(), e.client_message())))
     }
+
+    fn map_infrastructure_error(e: &dyn AppErrorInfo) -> AuthenticatorError {
+        AuthenticatorError::InfrastructureError(ComponentErrorDTO::new(e.level(), e.log_message(), e.client_message()))
+    }
+    
 }

@@ -1,16 +1,21 @@
 use crate::domain::settings::model::Credentials;
-use crate::domain::user::model::{AllowedRoles, UserNameEmailPasswordHash, UserWithRole};
 use crate::domain::user::service::{CommandUserService, QueryUserService};
-use crate::infrastructure::hasura::client_manager::HasuraClientManager;
-use crate::infrastructure::user::requests::create_user::{CrateUserRequestDescriptor, CrateUserResponse};
-use crate::infrastructure::user::requests::add_roles::{AddRoleRequestDescriptor, SetRoleResponse};
-use crate::infrastructure::user::requests::add_api_hash::{AddApiHAshRequestDescriptor, AddApiHashResponse};
-use crate::infrastructure::user::requests::get_user_by_email::{GetUserByEmailRequestDescriptor, GetUserByEmailResponse};
-use crate::infrastructure::user::requests::get_user_by_id::{GetUserByIdRequestDescriptor, GetUserByIdResponse};
-use crate::infrastructure::user::requests::get_user_by_tg_id::{GetUserByTgIdRequestDescriptor, GetUserByTgIdResponse};
+use crate::infrastructure::network::client_manager::HasuraClientManager;
+use crate::infrastructure::network::hasura::interface::HasuraInterface;
 
 use super::errors::UserManagerError;
+use super::requests::add_auth_method::{AddAuthMethodDescriptor, AddAuthMethodResponse};
+use super::requests::add_roles::{AddRoleRequestDescriptor, AddRoleResponse};
+use super::requests::add_user::{AddUserRequestDescriptor, AddUserResponse};
+use super::requests::add_user_attribute::{AddAttributesRequestDescriptor, AddAttributesResponse};
+use super::requests::check_auth_method::{CheckAuthMethodRequestDescriptor, CheckAuthMethodResponse};
 
+use crate::domain::user::models::base::{
+    AuthMethod,
+    UserRole,
+    User,
+    UserAttribute
+};
 
 pub struct UserCommand{
     credentials: Credentials,
@@ -19,145 +24,137 @@ pub struct UserCommand{
 impl UserCommand {
     pub fn new(credentials: Credentials) -> Self {
         Self { credentials }
-    }
+    }    
 }
 
-impl CommandUserService for UserCommand {
+impl CommandUserService for UserCommand { 
     type Error = UserManagerError;
 
-    async fn create_user(
-        &self,
-        new_user: UserNameEmailPasswordHash,
-    ) -> Result<UserWithRole, Self::Error> {
-        let client = HasuraClientManager::get_hasura_client()
+    async fn auth_identifier_is_free(&self, identifier: String) -> Result<bool, Self::Error> {
+        let mut client = HasuraClientManager::get_hasura_client(&self.credentials)
             .await
             .map_err(|e| UserManagerError::HasuraClientError(e))?;
-        
-        let descriptor = CrateUserRequestDescriptor::new(new_user);
+
+        let descriptor = CheckAuthMethodRequestDescriptor::new(identifier);
 
         let result = client
-            .execute::<CrateUserRequestDescriptor, CrateUserResponse>(&descriptor).await
+            .execute::<CheckAuthMethodRequestDescriptor, CheckAuthMethodResponse>(&descriptor).await
             .map_err(|e| UserManagerError::HasuraClientError(e))?;
-        
 
-        match result.insert_users_user.user.first() {
+        Ok(result.users_auth_method_aggregate.aggregate.count == 0)
+
+    }
+
+    async fn add_auth_method(&self, auth_method: AuthMethod) -> Result<AuthMethod, Self::Error> {
+        let mut client = HasuraClientManager::get_hasura_client(&self.credentials)
+            .await
+            .map_err(|e| UserManagerError::HasuraClientError(e))?;
+
+        let descriptor = AddAuthMethodDescriptor::new(auth_method);
+
+        let result = client
+            .execute::<AddAuthMethodDescriptor, AddAuthMethodResponse>(&descriptor).await
+            .map_err(|e| UserManagerError::HasuraClientError(e))?;
+
+        match result.insert_users_auth_method.returning.first() {
             Some(user) => Ok(user.clone()),
             None => Err(UserManagerError::FailedCreateUser),
         }
     }
-
-
-    async fn set_default_role(
-        &self,
-        mut user: UserWithRole,
-    ) -> Result<UserWithRole, Self::Error> {
-        let client = HasuraClientManager::get_hasura_client()
+    async fn add_role(&self, user_role: UserRole) -> Result<UserRole, Self::Error> {
+        let mut client = HasuraClientManager::get_hasura_client(&self.credentials)
             .await
             .map_err(|e| UserManagerError::HasuraClientError(e))?;
 
-        let default_role = self.credentials.new_user_role().with_email().clone();
-
-        let descriptor = AddRoleRequestDescriptor::new(default_role, user.id().clone(), true);
+        let descriptor = AddRoleRequestDescriptor::new(user_role);
 
         let result = client
-            .execute::<AddRoleRequestDescriptor, SetRoleResponse>(&descriptor).await
+            .execute::<AddRoleRequestDescriptor, AddRoleResponse>(&descriptor).await
             .map_err(|e| UserManagerError::HasuraClientError(e))?;
 
-        let Some(new_role) = result.new.roles.first() else {
-            return Err(UserManagerError::FailedCreateAllowedRoles);
-        };
-
-        user.add_role(new_role);
-
-        Ok(user)
-    }
-
-    async fn add_role(
-        &self,
-        mut user: UserWithRole,
-        allowed_role: AllowedRoles,
-    ) -> Result<UserWithRole, Self::Error> {
-        let client = HasuraClientManager::get_hasura_client()
-            .await
-            .map_err(|e| UserManagerError::HasuraClientError(e))?;
-
-        let descriptor = AddRoleRequestDescriptor::new(allowed_role.role().to_string(), user.id().clone(), true);
-        
-        let result = client
-            .execute::<AddRoleRequestDescriptor, SetRoleResponse>(&descriptor).await
-            .map_err(|e| UserManagerError::HasuraClientError(e))?;
-
-
-        let Some(new_role) = result.new.roles.first() else {
-            return Err(UserManagerError::FailedCreateAllowedRoles);
-        };
-
-        user.add_role(new_role);
-
-        Ok(user)
-    }
-
-    async fn add_api_hash(&self, user: UserWithRole, api_hash: &str) -> Result<UserWithRole, Self::Error> {
-        let client = HasuraClientManager::get_hasura_client()
-            .await
-            .map_err(|e| UserManagerError::HasuraClientError(e))?;
-
-        let descriptor = AddApiHAshRequestDescriptor::new(user.id().clone(), api_hash.clone().to_owned());
-
-        let result = client
-            .execute::<AddApiHAshRequestDescriptor, AddApiHashResponse>(&descriptor).await
-            .map_err(|e| UserManagerError::HasuraClientError(e))?;
-
-        match result.update_users_user.user.first() {
+        match result.insert_users_user_role.returning.first() {
             Some(user) => Ok(user.clone()),
-            None => Err(UserManagerError::FailedUpdateApiKey),
+            None => Err(UserManagerError::FailedCreateUser),
         }
+    }
+    async fn add_user(&self) -> Result<User, Self::Error> {
+        let mut client = HasuraClientManager::get_hasura_client(&self.credentials)
+            .await
+            .map_err(|e| UserManagerError::HasuraClientError(e))?;
+
+        let descriptor = AddUserRequestDescriptor;
+
+        let result = client
+            .execute::<AddUserRequestDescriptor, AddUserResponse>(&descriptor).await
+            .map_err(|e| UserManagerError::HasuraClientError(e))?;
+
+        match result.insert_users_user.returning.first() {
+            Some(user) => Ok(user.clone()),
+            None => Err(UserManagerError::FailedCreateUser),
+        }
+    }
+    async fn add_user_attribute(&self, attributes: Vec<UserAttribute>) -> Result<Vec<UserAttribute>, Self::Error> {
+        let mut client = HasuraClientManager::get_hasura_client(&self.credentials)
+            .await
+            .map_err(|e| UserManagerError::HasuraClientError(e))?;
+
+        let descriptor = AddAttributesRequestDescriptor::new(attributes);
+
+        let result = client
+            .execute::<AddAttributesRequestDescriptor, AddAttributesResponse>(&descriptor).await
+            .map_err(|e| UserManagerError::HasuraClientError(e))?;
+
+        Ok(result.insert_users_user_attribute.returning)
     }
 }
 
-pub struct UserQuery;
+
+use crate::domain::user::models::extended::ExtendedAuthMethod;
+
+use super::requests::get_user_by_identifier::{GetUserByIdentifierRequestDescriptor, GetUserByByIdentifierResponse};
+use super::requests::get_user_by_id::{GetUserByUserIdRequestDescriptor, GetUserByByUserIdResponse};
+
+
+pub struct UserQuery{
+    credentials: Credentials,
+}
+
+impl UserQuery {
+    pub fn new(credentials: Credentials) -> Self {
+        Self { credentials }
+    }
+}
 
 impl QueryUserService for UserQuery {
     type Error = UserManagerError;
-    async fn get_user_by_email(&self, email: &str) -> Result<Option<UserWithRole>, Self::Error> {
-        let client = HasuraClientManager::get_hasura_client()
+
+    
+    async fn get_user_by_identifier(&self, identifier: &str) -> Result<Option<ExtendedAuthMethod>, Self::Error> {
+        let mut client = HasuraClientManager::get_hasura_client(&self.credentials)
             .await
             .map_err(|e| UserManagerError::HasuraClientError(e))?;
 
-        let descriptor = GetUserByEmailRequestDescriptor::new(email.to_owned());
+        let descriptor = GetUserByIdentifierRequestDescriptor::new(identifier.to_owned());
 
         let result = client
-            .execute::<GetUserByEmailRequestDescriptor, GetUserByEmailResponse>(&descriptor).await
+            .execute::<GetUserByIdentifierRequestDescriptor, GetUserByByIdentifierResponse>(&descriptor).await
             .map_err(|e| UserManagerError::HasuraClientError(e))?;
 
-        Ok(result.users.first().and_then(|v| Some(v.clone())))
+        Ok(result.users_auth_method.first().and_then(|v| Some(v.clone())))
     }
 
-    async fn get_user_by_id(&self, id: &str) -> Result<Option<UserWithRole>, Self::Error> {
-        let client = HasuraClientManager::get_hasura_client()
+
+    async fn get_user_by_id(&self, id: uuid::Uuid) -> Result<Option<ExtendedAuthMethod>, Self::Error> {
+        let mut client = HasuraClientManager::get_hasura_client(&self.credentials)
             .await
             .map_err(|e| UserManagerError::HasuraClientError(e))?;
 
-        let descriptor = GetUserByIdRequestDescriptor::new(id.to_owned());
+        let descriptor = GetUserByUserIdRequestDescriptor::new(id.to_owned());
 
         let result = client
-            .execute::<GetUserByIdRequestDescriptor, GetUserByIdResponse>(&descriptor).await
+            .execute::<GetUserByUserIdRequestDescriptor, GetUserByByUserIdResponse>(&descriptor).await
             .map_err(|e| UserManagerError::HasuraClientError(e))?;
 
-        Ok(result.users.first().and_then(|v| Some(v.clone())))
-    }
-
-    async fn get_user_by_tg_id(&self, tg_id: &str) -> Result<Option<UserWithRole>, Self::Error> {
-        let client = HasuraClientManager::get_hasura_client()
-            .await
-            .map_err(|e| UserManagerError::HasuraClientError(e))?;
-
-        let descriptor = GetUserByTgIdRequestDescriptor::new(tg_id.to_owned());
-
-        let result = client
-            .execute::<GetUserByTgIdRequestDescriptor, GetUserByTgIdResponse>(&descriptor).await
-            .map_err(|e| UserManagerError::HasuraClientError(e))?;
-
-        Ok(result.users.first().and_then(|v| Some(v.clone())))
+        Ok(result.users_auth_method.first().and_then(|v| Some(v.clone())))
     }
 }

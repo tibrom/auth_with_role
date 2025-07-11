@@ -1,0 +1,170 @@
+{
+  "resource_version": 359,
+  "metadata": {
+    "version": 3,
+    "sources": [
+      {
+        "name": "default",
+        "kind": "postgres",
+        "tables": [
+          {
+            "table": {
+              "name": "attribute",
+              "schema": "users"
+            }
+          },
+          {
+            "table": {
+              "name": "auth_methods",
+              "schema": "users"
+            }
+          },
+          {
+            "table": {
+              "name": "auth_type",
+              "schema": "users"
+            },
+            "is_enum": true
+          },
+          {
+            "table": {
+              "name": "role",
+              "schema": "users"
+            },
+            "is_enum": true,
+            "insert_permissions": [
+              {
+                "role": "auth_server",
+                "permission": {
+                  "check": {},
+                  "columns": [
+                    "value"
+                  ]
+                },
+                "comment": ""
+              }
+            ],
+            "select_permissions": [
+              {
+                "role": "auth_server",
+                "permission": {
+                  "columns": [
+                    "value"
+                  ],
+                  "filter": {}
+                },
+                "comment": ""
+              }
+            ],
+            "update_permissions": [
+              {
+                "role": "auth_server",
+                "permission": {
+                  "columns": [
+                    "value"
+                  ],
+                  "filter": {},
+                  "check": null
+                },
+                "comment": ""
+              }
+            ],
+            "delete_permissions": [
+              {
+                "role": "auth_server",
+                "permission": {
+                  "filter": {}
+                },
+                "comment": ""
+              }
+            ]
+          },
+          {
+            "table": {
+              "name": "user",
+              "schema": "users"
+            },
+            "array_relationships": [
+              {
+                "name": "auth_methods",
+                "using": {
+                  "foreign_key_constraint_on": {
+                    "column": "user_id",
+                    "table": {
+                      "name": "auth_methods",
+                      "schema": "users"
+                    }
+                  }
+                }
+              },
+              {
+                "name": "user_roles",
+                "using": {
+                  "foreign_key_constraint_on": {
+                    "column": "user_id",
+                    "table": {
+                      "name": "user_roles",
+                      "schema": "users"
+                    }
+                  }
+                }
+              }
+            ],
+            "delete_permissions": [
+              {
+                "role": "auth_server",
+                "permission": {
+                  "filter": {}
+                },
+                "comment": ""
+              }
+            ]
+          },
+          {
+            "table": {
+              "name": "user_attribute",
+              "schema": "users"
+            }
+          },
+          {
+            "table": {
+              "name": "user_roles",
+              "schema": "users"
+            }
+          }
+        ],
+        "configuration": {
+          "connection_info": {
+            "database_url": {
+              "from_env": "HASURA_GRAPHQL_DATABASE_URL"
+            },
+            "isolation_level": "read-committed",
+            "pool_settings": {
+              "connection_lifetime": 600,
+              "idle_timeout": 180,
+              "max_connections": 50,
+              "retries": 1
+            },
+            "use_prepared_statements": true
+          }
+        }
+      }
+    ],
+    "query_collections": [
+      {
+        "name": "allowed-queries",
+        "definition": {
+          "queries": []
+        }
+      }
+    ],
+    "allowlist": [
+      {
+        "collection": "allowed-queries",
+        "scope": {
+          "global": true
+        }
+      }
+    ]
+  }
+}

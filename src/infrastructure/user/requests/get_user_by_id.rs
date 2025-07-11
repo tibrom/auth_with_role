@@ -1,36 +1,40 @@
-use super::super::hasura::gql_descriptor::{ObjectGQLDescriptor, StaticGQLDescriptor};
+use uuid::Uuid;
+
+use super::super::network::hasura::interface::{ObjectGQLDescriptor, StaticGQLDescriptor};
 use super::gql_dir::GQL_DIR;
 
-use crate::domain::user::model::UserWithRole;
+use crate::domain::user::models::extended::ExtendedAuthMethod;
 
-pub struct GetUserByIdRequestDescriptor{
-    id: String
+
+pub struct GetUserByUserIdRequestDescriptor{
+    user_id: Uuid
+
 }
-impl GetUserByIdRequestDescriptor {
-    pub fn new(id: String) -> Self {
-        Self { id }
+impl GetUserByUserIdRequestDescriptor {
+    pub fn new(user_id: Uuid) -> Self {
+        Self { user_id }
     }
 }
 
-impl ObjectGQLDescriptor for GetUserByIdRequestDescriptor {
+impl ObjectGQLDescriptor for GetUserByUserIdRequestDescriptor {
     fn variables(&self) -> serde_json::Value {
-        serde_json::json!({ "id": self.id })
+        serde_json::json!({ "user_id": self.user_id})
     }
 }
 
-impl StaticGQLDescriptor for GetUserByIdRequestDescriptor {
-    fn filename() -> &'static str {
-        "get_user_by_id.graphql"
+impl StaticGQLDescriptor for GetUserByUserIdRequestDescriptor {
+    fn filename(&self) -> &'static str {
+        "query_auth_method_by_user_id.graphql"
     }
-    fn operation_name() -> &'static str {
-        "GetUserById"
+    fn operation_name(&self) -> &'static str {
+        "GetAuthMethodByUserId"
     }
-    fn path() -> include_dir::Dir<'static> {
+    fn path(&self) -> include_dir::Dir<'static> {
         GQL_DIR.clone()
     }
 }
 
 #[derive(Debug, Clone, serde::Deserialize, serde::Serialize, PartialEq)]
-pub struct GetUserByIdResponse {
-    pub users: Vec<UserWithRole>
-}
+pub struct GetUserByByUserIdResponse {
+    pub users_auth_method: Vec<ExtendedAuthMethod>
+} 

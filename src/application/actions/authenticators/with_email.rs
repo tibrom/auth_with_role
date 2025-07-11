@@ -54,13 +54,13 @@ where
         email: String,
         password: String
     ) -> Result<TokenPairDto, AuthenticatorError> {
-        let user = match self.user_provider.get_user_by_email(&email).await {
+        let user = match self.user_provider.get_user_by_identifier(&email).await {
             Ok(Some(user)) => user,
             Ok(None) => return Err(AuthenticatorError::UserNotFound(email)),
             Err(e) => return self.infrastructure_error(&e)
         };
 
-        let Some(password_hash) = user.password_hash() else {
+        let Some(password_hash) = user.secret() else {
             return Err(AuthenticatorError::EmailPasswdAuthNotAllowed(email))
         };
 

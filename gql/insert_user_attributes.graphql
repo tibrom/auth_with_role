@@ -1,0 +1,10 @@
+mutation InsertMultipleAttributes($objects: [users_user_attribute_insert_input!]!) {
+  insert_users_user_attribute(objects: $objects) {
+    returning {
+      id
+      user_id
+      attribute
+      value
+    }
+  }
+}

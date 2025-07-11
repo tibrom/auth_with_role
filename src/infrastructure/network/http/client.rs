@@ -3,26 +3,29 @@ use std::time::{Duration, SystemTime};
 use uuid::Uuid;
 
 
+use super::interface::HttpClientInterface;
+
 #[derive(Debug, Clone)]
 pub struct HttpClient {
     uri: String,
-    headers: Option<Vec<(String, String)>>,
+    headers: Vec<(String, String)>,
 }
 
 impl HttpClient {
     pub fn new(uri: String) -> Self {
-        Self { uri, headers: None }
+        Self { uri, headers: Vec::new() }
     }
 
-    pub fn set_headers(&mut self, headers: Vec<(String, String)>) {
-        self.headers = Some(headers);
+    pub fn add_header(mut self, header: (String, String)) -> Self {
+        self.headers.push(header);
+        self
     }
 
     async fn request_inner(
+        &self,
         method: Method,
         uri: &str,
         body: Option<String>,
-        headers: Option<Vec<(String, String)>>,
         trace_id: Option<String>,
     ) -> Result<Response, reqwest::Error> {
         let client = reqwest::Client::builder()
@@ -34,8 +37,8 @@ impl HttpClient {
         if let Some(_body) = body.clone() {
             rb = rb.body(_body);
         }
-        if let Some(headers) = headers.clone() {
-            for (k, v) in headers {
+        if !self.headers.is_empty() {
+            for (k, v) in &self.headers {
                 rb = rb.header(k, v);
             }
         }
@@ -59,10 +62,10 @@ impl HttpClient {
     }
 
     async fn request(
+        &self,
         method: Method,
         uri: &str,
         body: Option<String>,
-        headers: Option<Vec<(String, String)>>,
     ) -> Result<Response, reqwest::Error> {
         let max_retry = 5;
         let retry_timeout = Duration::from_millis(1000);
@@ -70,11 +73,10 @@ impl HttpClient {
         let elapsed = SystemTime::now();
         loop {
             let trace_id = Uuid::new_v4().to_string();
-            match Self::request_inner(
+            match self.request_inner(
                 method.clone(),
                 uri,
                 body.clone(),
-                headers.clone(),
                 Some(trace_id.clone()),
             )
             .await
@@ -101,16 +103,25 @@ impl HttpClient {
         }
     }
 
-    pub async fn post(self, body: String) -> Result<String, reqwest::Error> {
-        let resp = Self::request(
+}
+
+
+impl HttpClientInterface for HttpClient  {
+    type Error = reqwest::Error;
+    async fn post(&self, body: String) -> Result<String, Self::Error> {
+        let resp = self.request(
             Method::POST,
             self.uri.clone().as_str(),
             Some(body.clone()),
-            self.headers.clone(),
         )
         .await?;
         let body_bytes = resp.bytes().await?;
         let body = String::from_utf8(body_bytes.to_vec()).unwrap();
         Ok(body)
     }
+}
+
+#[cfg(test)]
+mod tests {
+    
 }

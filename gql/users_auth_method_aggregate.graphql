@@ -1,0 +1,7 @@
+query CheckAuthMethodExists($identifier: String!) {
+  users_auth_method_aggregate(where: {identifier: {_eq: $identifier}}) {
+    aggregate {
+      count
+    }
+  }
+}

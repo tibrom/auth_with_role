@@ -1,5 +1,5 @@
 use crate::domain::errors::service::{AppErrorInfo, ErrorLevel};
-use super::super::hasura::error::HasuraClientError;
+use super::super::network::hasura::error::HasuraClientError;
 use thiserror::Error;
 
 /// Основная ошибка GraphQL клиента (обёртка)

@@ -1,37 +1,18 @@
-use std::str::FromStr;
-
 use super::errors::ApiKeyVerifierError;
 use crate::domain::settings::model::Credentials;
 use crate::domain::verifies::service::ApiKeyVerifierService;
-
-use aes_gcm::aead::{Aead, KeyInit};
-use aes_gcm::{Aes256Gcm, Key, Nonce}; // AES-GCM symmetric encryption
-use base64::{engine::general_purpose, Engine as _};
 use rand::{rngs::OsRng, TryRngCore};
-use sha2::{Digest, Sha256};
-use uuid::Uuid;
 
 const CHARSET: &[u8] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
 const BASE: usize = 62;
-const NONCE_LEN: usize = 12;
 
 pub struct ApiKeyVerifier {
     pub credentials: Credentials,
-    pub encryption_key: [u8; 32], // 256-bit key
 }
 
 impl ApiKeyVerifier {
     pub fn new(credentials: Credentials) -> Self {
-        let key = credentials.encryption_api_key().clone();
-        println!("key {:?}", key);
-        
-        let hash = Sha256::digest(key.as_bytes());
-
-        // Преобразуем результат в массив [u8; 32]
-        let mut encryption_key = [0u8; 32];
-        encryption_key.copy_from_slice(&hash[..]);
-
-        Self { credentials, encryption_key }
+        Self { credentials }
     }
 
     fn bytes_to_base62(&self, mut bytes: Vec<u8>) -> String {
@@ -50,85 +31,42 @@ impl ApiKeyVerifier {
         result
     }
 
-    fn encrypt_data(&self, value: String) -> Result<String, ApiKeyVerifierError> {
-        let key = Key::<Aes256Gcm>::from_slice(&self.encryption_key);
-        let cipher = Aes256Gcm::new(key);
+    fn generate_random_str(&self, length: usize) -> String {
+        let mut random = String::new();
 
-        let mut nonce_bytes = [0u8; NONCE_LEN];
-        _ = OsRng.try_fill_bytes(&mut nonce_bytes);
-        let nonce = Nonce::from_slice(&nonce_bytes);
-
-        let ciphertext = cipher
-            .encrypt(nonce, value.as_bytes().as_ref())
-            .map_err(|e| ApiKeyVerifierError::EncryptionError(e.to_string()))?;
-
-        let mut data = nonce_bytes.to_vec();
-        data.extend(ciphertext);
-
-        Ok(general_purpose::STANDARD_NO_PAD.encode(data))
-    }
-
-    fn decrypt_data(&self, value: &str) -> Result<String, ApiKeyVerifierError> {
-        let data = general_purpose::STANDARD_NO_PAD
-            .decode(value)
-            .map_err(|e| ApiKeyVerifierError::DecryptionError(e.to_string()))?;
-
-        if data.len() < NONCE_LEN {
-            return Err(ApiKeyVerifierError::DecryptionError(
-                "Invalid token format".into(),
-            ));
+        while random.len() < length {
+            let mut buffer = [0u8; 16];
+            OsRng.try_fill_bytes(&mut buffer).unwrap();
+            random.push_str(&self.bytes_to_base62(buffer.to_vec()));
         }
 
-        let (nonce_bytes, ciphertext) = data.split_at(NONCE_LEN);
-        let key = Key::<Aes256Gcm>::from_slice(&self.encryption_key);
-        let cipher = Aes256Gcm::new(key);
-        let nonce = Nonce::from_slice(nonce_bytes);
-
-        let decrypted = cipher
-            .decrypt(nonce, ciphertext)
-            .map_err(|e| ApiKeyVerifierError::DecryptionError(e.to_string()))?;
-
-        let result = String::from_utf8(decrypted)
-            .map_err(|e| ApiKeyVerifierError::DecryptionError(e.to_string()))?;
-
-        Ok(result)
-        
+        random
     }
 }
 
 impl ApiKeyVerifierService for ApiKeyVerifier {
     type Error = ApiKeyVerifierError;
 
-    fn generate(&self, user_id: Uuid) -> String {
+    fn generate(&self) -> String {
+        let identifier = self.generate_random_str(*self.credentials.api_key_length() as usize);
+        let secret = self.generate_random_str(*self.credentials.api_key_length() as usize);
 
-        let random_len = *self.credentials.api_key_length() as usize;
-        let mut random_part = String::new();
+        format!("{}-{}", identifier, secret)
 
-        while random_part.len() < random_len {
-            let mut buffer = [0u8; 16];
-            OsRng.try_fill_bytes(&mut buffer).unwrap();
-            random_part.push_str(&self.bytes_to_base62(buffer.to_vec()));
+    }
+
+    fn extract_identifier(&self, api_key: &str) -> Result<String, Self::Error> {
+        let parts: Vec<&str> = api_key.split('-').collect();
+
+        if parts.len() != 2 {
+            return Err(ApiKeyVerifierError::DecryptionError(
+                "Token format invalid".to_string(),
+            ));
         }
 
-        println!("random_part {:?}", random_part);
-        random_part.truncate(random_len);
-
-        let value = format!("{}={}", user_id, random_part);
-
-        self.encrypt_data(value).expect("UUID encryption failed")
+        Ok(parts[0].to_string())
     }
 
-    fn extract_user_id(&self, api_key: &str) -> Result<Uuid, Self::Error> {
-        let encrypted_api_key = self.decrypt_data(api_key)?;
-
-        let user_id_str = encrypted_api_key.split('=').next().ok_or_else(|| {
-            ApiKeyVerifierError::DecryptionError("Token format invalid".to_string())
-        })?;
-
-        
-        Uuid::from_str(user_id_str)
-            .map_err(|e| ApiKeyVerifierError::DecryptionError(e.to_string()))
-    }
 
     fn is_verified(&self, api_key_hash: &str, api_key: &str) -> Result<bool, Self::Error> {
         bcrypt::verify(api_key, api_key_hash).map_err(|e| {
@@ -149,3 +87,58 @@ impl ApiKeyVerifierService for ApiKeyVerifier {
     }
 }
 
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::domain::settings::model::Credentials;
+    use crate::domain::verifies::service::ApiKeyVerifierService;
+
+    fn mock_credentials() -> Credentials {
+        Credentials::mock()
+    }
+
+
+    #[test]
+    fn test_extract_identifier() {
+        let credentials = mock_credentials();
+        let verifier = ApiKeyVerifier::new(credentials);
+        let api_key = "ABCDEF1234567890-ZYXW9876543210";
+        let identifier = verifier.extract_identifier(api_key).unwrap();
+        assert_eq!(identifier, "ABCDEF1234567890");
+    }
+
+    #[test]
+    fn test_extract_identifier_invalid_format() {
+        let credentials = mock_credentials();
+        let verifier = ApiKeyVerifier::new(credentials);
+        let api_key = "invalidformat";
+
+
+        let result = verifier.extract_identifier(api_key);
+        println!("result {:?}", result);
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_hash_and_verify_success() {
+        let credentials = mock_credentials();
+        let verifier = ApiKeyVerifier::new(credentials);
+        let api_key = "TestApiKey123";
+
+        let hash = verifier.create_hash(api_key).unwrap();
+        let is_valid = verifier.is_verified(&hash, api_key).unwrap();
+        assert!(is_valid);
+    }
+
+    #[test]
+    fn test_hash_and_verify_failure() {
+        let credentials = mock_credentials();
+        let verifier = ApiKeyVerifier::new(credentials);
+        let api_key = "TestApiKey123";
+        let wrong_key = "WrongKey";
+
+        let hash = verifier.create_hash(api_key).unwrap();
+        let is_valid = verifier.is_verified(&hash, wrong_key).unwrap();
+        assert!(!is_valid);
+    }
+}

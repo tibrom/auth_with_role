@@ -23,6 +23,6 @@ impl JWTProviderFactory for JWTProvider  {
         ClaimsProvider::new(self.credentials.clone())
     }
     fn token_service(&self) -> Self::Tokens {
-        TokenProvider
+        TokenProvider::new(self.credentials.clone())
     }
 }

@@ -1,5 +1,6 @@
 
 use crate::domain::errors::service::AppErrorInfo;
+use crate::domain::user::models::base::AuthMethod;
 use crate::domain::user::service::{CommandUserService, QueryUserService};
 use crate::domain::verifies::service::{ApiKeyVerifierService, PasswordVerifierService};
 
@@ -13,6 +14,7 @@ use super::dto::ApiKeyDto;
 
 
 
+const AUTH_TYPE: &str = "apikey"; 
 
 const WRONG_CREDENTIALS: &str = "Incorrect login or password";
 
@@ -71,13 +73,13 @@ where
         email: String,
         password: String
     ) -> Result<ApiKeyDto, UserAttributeError> {
-        let user = match self.query_user_service.get_user_by_email(&email).await {
+        let user = match self.query_user_service.get_user_by_identifier(&email).await {
             Ok(Some(user)) => user,
             Ok(None) => return Err(UserAttributeError::UserNotFound(email)),
             Err(e) => return self.infrastructure_error(&e)
         };
 
-        let Some(password_hash) = user.password_hash() else {
+        let Some(password_hash) = user.secret() else {
             return Err(UserAttributeError::EmailPasswdAuthNotAllowed(email))
         };
 
@@ -87,27 +89,40 @@ where
             Err(e) => return self.infrastructure_error(&e)
         };
 
-        let api_key = self
+        let mut  api_key = self
             .api_key_verifier
-            .generate(user.id().clone());
+            .generate();
 
-        let api_key_hash = match self.api_key_verifier.create_hash(&api_key) {
-            Ok(v) => v,
-            Err(e) => return self.infrastructure_error(&e),
-        };
+    
+        let identifier = self.api_key_verifier.extract_identifier(&api_key)
+            .map_err(|e| Self::map_infrastructure_error(&e))?;
 
-        if let Err(e) = self
-            .command_user_service
-            .add_api_hash(user, &api_key_hash)
-            .await
-        {
-            return self.infrastructure_error(&e);
+        let identifier_is = self.command_user_service.auth_identifier_is_free(identifier.clone()).await
+            .map_err(|e| Self::map_infrastructure_error(&e))?;
+
+        if !identifier_is {
+            return Err(UserAttributeError::NotCorrectApiKey);
         };
+        let api_key_hash =  self.api_key_verifier.create_hash(&api_key)
+            .map_err(|e| Self::map_infrastructure_error(&e))?;
+
+        let auth_method = AuthMethod::new(
+            user.user_id().clone(),
+            AUTH_TYPE.clone().to_string(),
+            identifier,
+            Some(api_key_hash)
+        );
+
+        self.command_user_service.add_auth_method(auth_method).await
+            .map_err(|e| Self::map_infrastructure_error(&e))?;
 
         Ok(ApiKeyDto{api_key: api_key})
     }
 
     fn infrastructure_error(&self, e: &dyn AppErrorInfo) -> Result<ApiKeyDto, UserAttributeError> {
         Err(UserAttributeError::InfrastructureError(ComponentErrorDTO::new(e.level(), e.log_message(), e.client_message())))
+    }
+    fn map_infrastructure_error(e: &dyn AppErrorInfo) -> UserAttributeError {
+        UserAttributeError::InfrastructureError(ComponentErrorDTO::new(e.level(), e.log_message(), e.client_message()))
     }
 }

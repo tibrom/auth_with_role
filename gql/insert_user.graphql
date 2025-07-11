@@ -1,0 +1,9 @@
+mutation InsertUser {
+  insert_users_user(objects: {}) {
+    returning {
+      created_at
+      id
+      updated_at
+    }
+  }
+}

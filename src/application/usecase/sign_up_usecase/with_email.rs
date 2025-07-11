@@ -1,18 +1,15 @@
 use super::dto::{SignUpRequestDto, SignUpResponseDto};
 use super::ServiceErrorExt;
-use super::dto::UserDataDto;
 use crate::application::actions::user_attribute::dto::SignUpUserDto;
 use crate::domain::errors::service::{AppErrorInfo, ErrorLevel};
-use crate::domain::settings::service::CredentialsService;
+use crate::domain::settings::model::Credentials;
 use crate::domain::user::factories::UserProviderFactory;
-use crate::domain::user::model::{AllowedRoles, UserNameEmailPasswordHash};
-use crate::domain::user::service::CommandUserService;
 use crate::domain::verifies::factories::VerifiesProviderFactory;
-use crate::domain::verifies::service::PasswordVerifierService;
 
 use crate::application::actions::user_attribute::user::CreateUserWithEmailPasswdAction;
 
 pub struct SignUpWithEmailUseCase<V, U> {
+    credentials: Credentials,
     verifies_provider_factory: V,
     user_provider_factory: U,
 }
@@ -24,8 +21,9 @@ where
     V: VerifiesProviderFactory,
     U: UserProviderFactory
 {
-    pub fn new(verifies_provider_factory: V, user_provider_factory: U) -> Self {
+    pub fn new(verifies_provider_factory: V, user_provider_factory: U, credentials: Credentials) -> Self {
         Self {
+            credentials,
             verifies_provider_factory,
             user_provider_factory,
         }
@@ -33,6 +31,7 @@ where
 
     pub async fn execute(&self, user: SignUpRequestDto) -> Result<SignUpResponseDto, String> {
         let create_user_sub_case = CreateUserWithEmailPasswdAction::new(
+            self.credentials.clone(),
             &self.verifies_provider_factory,
             &self.user_provider_factory
         );

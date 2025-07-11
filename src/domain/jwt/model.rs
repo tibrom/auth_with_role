@@ -25,7 +25,7 @@ impl HasuraClaims {
 
 #[derive(Debug, Clone, serde::Deserialize, serde::Serialize)]
 pub struct Claims {
-    sub: String,
+    pub sub: String,
     admin: bool,
     exp: usize,
     #[serde(rename = "https://hasura.io/jwt/claims")]
@@ -43,14 +43,14 @@ impl Claims {
     }
 }
 
-#[derive(Debug, serde::Deserialize, serde::Serialize)]
+#[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
 pub struct RefreshClaims {
     pub sub: String,
-    exp: i16,
+    exp: usize,
 }
 
 impl RefreshClaims {
-    pub fn new(sub: String, exp: i16) -> Self {
+    pub fn new(sub: String, exp: usize) -> Self {
         Self { sub, exp }
     }
 }

@@ -12,7 +12,8 @@ pub trait PasswordVerifierService {
 pub trait ApiKeyVerifierService {
     type Error: AppErrorInfo;
     fn is_verified(&self, api_key_hash: &str, api_key: &str) -> Result<bool, Self::Error>;
-    fn generate(&self, user_id: Uuid) -> String;
-    fn extract_user_id(&self, api_key: &str) -> Result<Uuid, Self::Error>;
+    fn generate(&self) -> String;
+    fn extract_identifier(&self, api_key: &str) -> Result<String, Self::Error>;
     fn create_hash(&self, api_key: &str) -> Result<String, Self::Error>;
 }
+ 

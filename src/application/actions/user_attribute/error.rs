@@ -4,6 +4,8 @@ use crate::domain::errors::service::{AppErrorInfo, ErrorLevel};
 
 #[derive(Debug, Error)]
 pub enum UserAttributeError {
+    #[error("EmailIsBusy")]
+    EmailIsBusy,
     #[error("Infrastructure Error")]
     InfrastructureError(ComponentErrorDTO),
     #[error("User not found by {0}")]
@@ -34,6 +36,9 @@ impl AppErrorInfo for UserAttributeError {
         match self {
             UserAttributeError::InfrastructureError(e) => {
                 e.client_message()
+            }
+            UserAttributeError::EmailIsBusy => {
+                format!("This email already is busy")
             }
             _ => self.msg_not_correct_credentials()
         }
@@ -66,9 +71,19 @@ impl AppErrorInfo for UserAttributeError {
             UserAttributeError::EmailPasswdAuthNotAllowed(v) => {
                 format!("User doesn't have email or password. Authentications not allowed for this user {}", v)
             }
+            UserAttributeError::EmailIsBusy => {
+                format!("Try create user with busy email")
+            }
             UserAttributeError::InfrastructureError(e) => {
                 e.log_message()
             }
         }
+    }
+}
+
+
+pub trait  MapUserAttributeError {
+    fn map_infrastructure_error(e: &dyn AppErrorInfo) -> UserAttributeError {
+        UserAttributeError::InfrastructureError(ComponentErrorDTO::new(e.level(), e.log_message(), e.client_message()))
     }
 }

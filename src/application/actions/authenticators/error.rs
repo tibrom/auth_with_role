@@ -15,7 +15,9 @@ pub enum AuthenticatorError {
     #[error("Api Key is not verified")]
     NotCorrectApiKey,
     #[error("Password Hash is not verified")]
-    NotCorrectPassword
+    NotCorrectPassword,
+    #[error("Refresh token is not verified")]
+    NotCorrectRefreshToken
 
 
 }
@@ -68,6 +70,9 @@ impl AppErrorInfo for AuthenticatorError {
             }
             AuthenticatorError::InfrastructureError(e) => {
                 e.log_message()
+            }
+            AuthenticatorError::NotCorrectRefreshToken => {
+                format!("Refresh token is not verified")
             }
         }
     }

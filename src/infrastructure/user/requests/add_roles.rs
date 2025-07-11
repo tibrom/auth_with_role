@@ -1,18 +1,16 @@
 use uuid::Uuid;
 
-use super::super::hasura::gql_descriptor::{ObjectGQLDescriptor, StaticGQLDescriptor};
+use super::super::network::hasura::interface::{ObjectGQLDescriptor, StaticGQLDescriptor};
 use super::gql_dir::GQL_DIR;
 
-use crate::domain::user::model::AllowedRoles;
+use crate::domain::user::models::base::UserRole;
 
 pub struct AddRoleRequestDescriptor{
-    role: String,
-    user_id: Uuid,
-    is_default: bool,
+    user_role: UserRole
 }
 impl AddRoleRequestDescriptor {
-    pub fn new(role: String, user_id: Uuid, is_default: bool,) -> Self {
-        Self { role, user_id, is_default }
+    pub fn new(user_role: UserRole) -> Self {
+        Self { user_role }
     }
 }
 
@@ -20,33 +18,33 @@ impl ObjectGQLDescriptor for AddRoleRequestDescriptor {
     fn variables(&self) -> serde_json::Value {
         serde_json::json!(
             {
-                "role": self.role,
-                "user_id": self.user_id,
-                "is_default": self.is_default
+                "user_id": self.user_role.user_id(),
+                "role": self.user_role.role(),
+                "is_default": self.user_role.is_default()
             }
         )
     }
 }
 
 impl StaticGQLDescriptor for AddRoleRequestDescriptor {
-    fn filename() -> &'static str {
-        "create_allowed_roles.graphql"
+    fn filename(&self) -> &'static str {
+        "insert_user_role.graphql"
     }
-    fn operation_name() -> &'static str {
-        "CreateAllowedRoles"
+    fn operation_name(&self) -> &'static str {
+        "InsertUsersRole"
     }
-    fn path() -> include_dir::Dir<'static> {
+    fn path(&self) -> include_dir::Dir<'static> {
         GQL_DIR.clone()
     }
 }
 
 #[derive(Debug, Clone, serde::Deserialize, serde::Serialize, PartialEq)]
-pub struct SetRoleResponse {
-    pub new: UserRoles
+pub struct AddRoleResponse {
+    pub insert_users_user_role: Returning
 }
 
 
 #[derive(Debug, Clone, serde::Deserialize, serde::Serialize, PartialEq)]
-pub struct UserRoles {
-    pub roles: Vec<AllowedRoles>,
+pub struct Returning {
+    pub returning: Vec<UserRole>,
 }

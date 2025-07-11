@@ -20,6 +20,6 @@ impl UserProviderFactory for UserProvider {
         UserCommand::new(self.credentials.clone())
     }
     fn query_user(&self) -> Self::QueryUser {
-        UserQuery
+        UserQuery::new(self.credentials.clone())
     }
 }

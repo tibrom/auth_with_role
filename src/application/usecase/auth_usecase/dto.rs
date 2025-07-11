@@ -32,9 +32,17 @@ pub struct LoginApiKeyRequestDto {
     pub api_key: String,
 }
 
+#[derive(Debug, Clone, serde::Deserialize, serde::Serialize, PartialEq)]
+pub struct RefreshTokenRequestDto {
+    pub refresh_token: String,
+}
+
+
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 #[serde(tag = "status", rename_all = "lowercase")] // JSON: "success", "error"
 pub enum LoginApiKeyResponseDto {
     Success { auth_data: TokenPairDto },
     Error { err_msg: String },
 }
+
+

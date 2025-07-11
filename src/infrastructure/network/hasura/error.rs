@@ -9,7 +9,7 @@ pub enum HasuraClientError {
     ResponseJsonParseError(String),
 
     #[error("HTTP request failed: {0}")]
-    HttpRequestError(#[from] reqwest::Error),
+    HttpRequestError(String),
 
     #[error("Failed to parse hasura response errors: {0}")]
     UnknownHasuraResponseError(String),
