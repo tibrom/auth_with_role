@@ -1,0 +1,102 @@
+1 Принимать соединения (значит надо сделать трейт, который возвращает некоторуб структуру с данными соединения)
+ 
+
+На каждое соединение
+
+Два различных use case
+1) web socket
+2) http
+
+Для web socket
+1) State INIT (Сборка метаданных подключения и авторизация)
+1.1) создаем модель соединения 
+1.2) Проверяем  авторизацию входящего подключения
+1.3) Создаем JWT токен
+1.4) Добавляем токен в метаданные
+
+2) State RUN
+
+2.1) Запускает сопроцес проксирования с собранными в 1 метаданными
+2.2) Сохраняем ручку проксирования в пямяти, чтоб можно было управлять сопроцессом по  UUID
+2.3) При каждом запросе от клиента проверяем, авторизацию, если надо обновляем токен
+
+3) State Stopping
+3.1 Останавлиаем подключение
+3.2 Удаляем метаданных подключения
+
+
+Для http
+
+1) State INIT (Сборка метаданных подключения и авторизация)
+
+1.1) создаем модель соединения 
+1.2) Проверяем  авторизацию входящего подключения
+1.3) Создаем JWT токен
+1.4) Добавляем токен в метаданные
+
+2) State RUN
+
+2.1) Запускает сопроцес проксирования с собранными в 1 метаданными
+2.2) Сохраняем ручку проксирования в пямяти, чтоб можно было управлять сопроцессом по  UUID
+2.3) При каждом запросе от клиента проверяем, авторизацию, если надо обновляем токен
+
+3) State Stopping
+3.1 Останавлиаем подключение
+3.2 Удаляем метаданных подключения
+
+
+
+Цикл работы прокси сервера
+
+1) Принимаем подключение и переходим в состояние Initial, в котором сохраняем подключение используя ConnectionManager -> ConnectionInitializerUseCase
+2) После сохранения подключения и переходим в состояние Authorization в котором получаем access_token. -> AuthorizeUseCase, AuthorizeProxyByApiKeySubCase or AuthorizeProxyByJWTSubCase
+3) Далее переходим в состояние Running в котором пересылаем трафик 
+4) По истечении срока действия токена переходим в состояние UpdateAccessToken -> DefineAuthorizeTypeUseCase, AuthorizeProxyByApiKeyUseCase or AuthorizeProxyByJWTUseCase
+
+Дополнительные состояния
+5) Paused в котором мы поддерживаем соединение но не пересылаем трафик -> 
+6) Stopping в котором мы разрываем соединение -> StopConnectionUseCase
+
+0) Новое подключение. Мы принимаем подключение и переходим в состояние WaitingAuth
+1) авторизация и получение access токена. после этого переходим в состояние RunningProxy 
+2) сохранение токена вместе с подключением в хранилище 
+3) 
+
+
+
+authorize_use_case
+
+1) ConnectionController 
+Обрабатывает сообщения 
+pub enum ProcessMessage {
+    Context(Box<ConnectionContext>)
+}
+
+2) ConnectionContextCreater
+Генерирует ConnectionContext 
+
+3) ForwardingUseCase
+1) проверяет состояние 
+2) пересыает сообщения
+3) 
+
+Процесс работы сервера
+
+1) новое подключение --Создаем ConnectionContext --> | Запускаем процесс пересылки ForwardingUseCase
+
+
+
+
+Процесс обработки подключения
+
+2.1) ConnectionContextExtractor::init(stream: &TcpStream) -> ConnectionContext -> ForwardingUseCase.connection_context
+2.2) EndpointClient::init(stream: TcpStream) -> Result<Self, WebSocketError> -> ForwardingUseCase.transport_endpoint_client
+2.3) Listener::init() -> Self -> ForwardingUseCase.command_listener
+2.4) MessageController.get_sender()-> Synchronizer::init(address: mpsc::Sender<ProcessMessage>) -> Self -> ForwardingUseCase.context_synchro
+2.5) Connector::new(credentials: Credentials) -> Self -> ForwardingUseCase.server_connector
+
+3)
+id = ConnectionContext.id                                                   |
+handle = tokio::spawn(async move {ForwardingUseCase.execute().await})       |-> Connection -> ConnectionController::add_connection(Connection)
+address = Listener.get_sender()                                             |
+

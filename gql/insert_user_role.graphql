@@ -1,0 +1,11 @@
+mutation InsertUsersRole($user_id: uuid = "", $role: users_role_enum = auth_server, $is_default: Boolean = false) {
+  insert_users_user_role(objects: {is_default: $is_default, role: $role, user_id: $user_id}) {
+    returning {
+      user_id
+      role
+      is_default
+      id
+      created_at
+    }
+  }
+}

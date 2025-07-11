@@ -1,6 +1,6 @@
-use crate::application::auth::dto::CreateApiKeyRequestDto;
-use crate::application::auth::dto::{
-    LoginApiKeyRequestDto, LoginEmailPasRequestDto,
+use crate::application::usecase::auth_usecase::dto::CreateApiKeyRequestDto;
+use crate::application::usecase::auth_usecase::dto::{
+    LoginApiKeyRequestDto, LoginEmailPasRequestDto, RefreshTokenRequestDto
 };
 use crate::interface::web::state::AppState;
 use actix_web::{post, web, HttpResponse, Responder};
@@ -20,6 +20,23 @@ pub async fn login(
         })),
     }
 }
+
+#[post("/refresh")]
+pub async fn refresh(
+    data: web::Data<AppState>,
+    payload: web::Json<RefreshTokenRequestDto>,
+) -> impl Responder {
+    let dto = payload.into_inner();
+    let result = data.refresh_token_use_case.clone().execute(dto).await;
+
+    match result {
+        Ok(v) => HttpResponse::Ok().json(v),
+        Err(_) => HttpResponse::InternalServerError().json(serde_json::json!({
+            "error": "Internal error"
+        })),
+    }
+}
+
 
 #[post("/loginapikey")]
 pub async fn loginapikey(

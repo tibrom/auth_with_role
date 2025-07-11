@@ -1,27 +1,38 @@
 
 use crate::domain::jwt::model::{Claims, HasuraClaims, RefreshClaims};
 use crate::domain::jwt::service::JwtClaimsService;
+use crate::domain::settings::model::Credentials;
 use crate::domain::settings::service::CredentialsService as _;
-use crate::domain::user::model::UserWithRole;
+use crate::domain::user::models::extended::ExtendedAuthMethod;
 
 use super::config::credentials_provider::CredentialsProvider;
 use super::error::JwtError;
 
-pub struct ClaimsProvider;
+pub struct ClaimsProvider{
+    credentials: Credentials,
+}
+
+impl ClaimsProvider {
+    pub fn new(credentials: Credentials) -> Self {
+        Self { credentials }
+    }
+}
 
 impl JwtClaimsService for ClaimsProvider {
     type Error = JwtError;
 
-    fn access_claims(&self, user: &UserWithRole) -> Result<Claims, Self::Error> {
+    fn access_claims(&self, user: &ExtendedAuthMethod) -> Result<Claims, Self::Error> {
         let x_hasura_default_role = user
-            .allowed_roles()
+            .user()
+            .user_roles()
             .iter()
             .find(|v| *v.is_default())
             .map(|v| Ok(v.role().clone()))
             .unwrap_or_else(|| Err(JwtError::DefaultRoleMissing))?;
 
         let x_hasura_allowed_roles = user
-            .allowed_roles()
+            .user()
+            .user_roles()
             .iter()
             .map(|v| v.role().clone())
             .collect::<Vec<_>>();
@@ -33,10 +44,7 @@ impl JwtClaimsService for ClaimsProvider {
             x_hasura_allowed_roles,
             x_hasura_user_id.clone(),
         );
-        let exp = CredentialsProvider
-            .get_credentials()
-            .map(|v| v.expiration_access_hours().clone())
-            .map_err(|e| JwtError::CredentialsUnavailable(e))?;
+        let exp = self.credentials.expiration_access_hours().clone();
 
         let expiration = chrono::Utc::now()
             .checked_add_signed(chrono::Duration::hours(exp.into()))
@@ -52,10 +60,7 @@ impl JwtClaimsService for ClaimsProvider {
     }
 
     fn inner_access_claims(&self) -> Result<Claims, Self::Error> {
-        let hasura_credentials = CredentialsProvider
-            .get_credentials()
-            .map(|e| e.hasura_credentials().clone())
-            .map_err(|e| JwtError::CredentialsUnavailable(e))?;
+        let hasura_credentials = self.credentials.hasura_credentials().clone();
 
         let x_hasura_default_role = hasura_credentials.x_hasura_default_role().clone();
         let x_hasura_allowed_roles = vec![x_hasura_default_role.clone()];
@@ -80,12 +85,13 @@ impl JwtClaimsService for ClaimsProvider {
         ))
     }
 
-    fn refresh_claims(&self, user: &UserWithRole) -> Result<RefreshClaims, Self::Error> {
-        let sub = user.id().to_string();
-        let exp = CredentialsProvider
-            .get_credentials()
-            .map(|v| v.expiration_refresh_hours().clone())
-            .map_err(|e| JwtError::CredentialsUnavailable(e))?;
-        Ok(RefreshClaims::new(sub, exp))
+    fn refresh_claims(&self, user: &ExtendedAuthMethod) -> Result<RefreshClaims, Self::Error> {
+        let sub = user.user_id().to_string();
+        let exp = self.credentials.expiration_refresh_hours().clone();
+        let expiration = chrono::Utc::now()
+            .checked_add_signed(chrono::Duration::hours(exp.into()))
+            .expect("valid timestamp")
+            .timestamp() as usize;
+        Ok(RefreshClaims::new(sub, expiration))
     }
 }

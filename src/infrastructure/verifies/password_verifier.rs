@@ -27,3 +27,33 @@ impl PasswordVerifierService for PasswordVerifier {
         })
     }
 }
+
+
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::domain::verifies::service::PasswordVerifierService;
+
+    #[test]
+    fn test_valid_password() {
+        let verifier = PasswordVerifier;
+        let password = "Password123";
+        let hash = verifier.create_hash(password).unwrap();
+
+        let is_valid = verifier.is_verified(&hash, password).unwrap();
+        assert!(is_valid);
+    }
+
+    #[test]
+    fn test_invalid_password() {
+        let verifier = PasswordVerifier;
+        let password = "Password123";
+        let invalid_password = "InvalidPassword123";
+        let hash = verifier.create_hash(password).unwrap();
+
+        let is_valid = verifier.is_verified(&hash, invalid_password).unwrap();
+        assert!(!is_valid);
+    }
+}
+
