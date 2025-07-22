@@ -1,4 +1,4 @@
-use super::service::{QueryUserService, CommandUserService};
+use super::service::{CommandUserService, QueryUserService};
 
 pub trait UserProviderFactory {
     type QueryUser: QueryUserService + Send;

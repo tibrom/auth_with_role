@@ -6,8 +6,14 @@ use super::ExtendedAuthMethod;
 pub trait JwtClaimsService {
     type Error: AppErrorInfo;
 
-    fn access_claims(&self, extended_auth_method: &ExtendedAuthMethod) -> Result<Claims, Self::Error>;
-    fn refresh_claims(&self, extended_auth_method: &ExtendedAuthMethod) -> Result<RefreshClaims, Self::Error>;
+    fn access_claims(
+        &self,
+        extended_auth_method: &ExtendedAuthMethod,
+    ) -> Result<Claims, Self::Error>;
+    fn refresh_claims(
+        &self,
+        extended_auth_method: &ExtendedAuthMethod,
+    ) -> Result<RefreshClaims, Self::Error>;
     fn inner_access_claims(&self) -> Result<Claims, Self::Error>;
 }
 

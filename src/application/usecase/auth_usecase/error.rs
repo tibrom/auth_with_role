@@ -1,11 +1,8 @@
-use thiserror::Error;
-use crate::application::error_dto::ComponentErrorDTO;
 use crate::domain::errors::service::{AppErrorInfo, ErrorLevel};
+use thiserror::Error;
 
 #[derive(Debug, Error)]
 pub enum AuthenticatorError {
-    #[error("Infrastructure Error")]
-    InfrastructureError(ComponentErrorDTO),
     #[error("User not found by {0}")]
     UserNotFound(String),
     #[error("User not found by {0}")]
@@ -17,9 +14,7 @@ pub enum AuthenticatorError {
     #[error("Password Hash is not verified")]
     NotCorrectPassword,
     #[error("Refresh token is not verified")]
-    NotCorrectRefreshToken
-
-
+    NotCorrectRefreshToken,
 }
 
 impl AuthenticatorError {
@@ -33,23 +28,11 @@ impl AuthenticatorError {
 
 impl AppErrorInfo for AuthenticatorError {
     fn client_message(&self) -> String {
-        match self {
-            AuthenticatorError::InfrastructureError(e) => {
-                e.client_message()
-            }
-            _ => self.msg_not_correct_credentials()
-        }
+        self.msg_not_correct_credentials()
     }
 
     fn level(&self) -> ErrorLevel {
-        match self {
-            AuthenticatorError::InfrastructureError(e) => {
-                e.level()
-            }
-            _ => {
-                self.error_level()
-            }
-        }
+        self.error_level()
     }
     fn log_message(&self) -> String {
         match self {
@@ -67,9 +50,6 @@ impl AppErrorInfo for AuthenticatorError {
             }
             AuthenticatorError::EmailPasswdAuthNotAllowed(v) => {
                 format!("User doesn't have email or password. Authentications not allowed for this user {}", v)
-            }
-            AuthenticatorError::InfrastructureError(e) => {
-                e.log_message()
             }
             AuthenticatorError::NotCorrectRefreshToken => {
                 format!("Refresh token is not verified")

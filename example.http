@@ -40,7 +40,7 @@ POST http://127.0.0.1:8081/auth/loginapikey HTTP/1.1
 content-type: application/json
 
 {
-    "api_key": "GH4NTE0jmib0XyyN86mOvC-DjKYyNOaU4MD6RsnQxWVe0"
+    "api_key": "EAWr1bjwJK-B1L134YGGM"
 }
 ###
 

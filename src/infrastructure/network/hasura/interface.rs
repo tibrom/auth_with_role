@@ -1,8 +1,7 @@
-use serde::de::DeserializeOwned;
-use include_dir::Dir;
-use serde_json::Value;
 use super::error::HasuraClientError;
-
+use include_dir::Dir;
+use serde::de::DeserializeOwned;
+use serde_json::Value;
 
 pub trait HasuraInterface {
     async fn execute<D, T>(&mut self, descriptor: &D) -> Result<T, HasuraClientError>
@@ -16,7 +15,6 @@ pub trait StaticGQLDescriptor {
     fn operation_name(&self) -> &'static str;
     fn path(&self) -> Dir<'static>;
 }
-
 
 pub trait ObjectGQLDescriptor {
     fn variables(&self) -> Value {

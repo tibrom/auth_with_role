@@ -1,12 +1,9 @@
+use super::password_verifier::PasswordVerifier;
 use crate::domain::settings::model::Credentials;
 use crate::domain::verifies::factories::VerifiesProviderFactory;
 use crate::infrastructure::verifies::api_key_verifier::ApiKeyVerifier;
-use super::password_verifier::PasswordVerifier;
 
-
-
-
-pub struct VerifiesProvider{
+pub struct VerifiesProvider {
     credentials: Credentials,
 }
 
@@ -16,7 +13,7 @@ impl VerifiesProvider {
     }
 }
 
-impl VerifiesProviderFactory for VerifiesProvider  {
+impl VerifiesProviderFactory for VerifiesProvider {
     type ApiKeyVerifier = ApiKeyVerifier;
     type PasswordVerifier = PasswordVerifier;
     fn api_key_verifier(&self) -> Self::ApiKeyVerifier {

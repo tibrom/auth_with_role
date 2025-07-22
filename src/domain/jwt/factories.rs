@@ -1,4 +1,4 @@
-use super::service::{TokenService, JwtClaimsService};
+use super::service::{JwtClaimsService, TokenService};
 
 pub trait JWTProviderFactory {
     type Claims: JwtClaimsService + Send;

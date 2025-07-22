@@ -1,10 +1,8 @@
 use super::super::network::hasura::interface::{ObjectGQLDescriptor, StaticGQLDescriptor};
 use super::gql_dir::GQL_DIR;
 
-use crate::domain::user::models::base::UserRole;
-
-pub struct CheckAuthMethodRequestDescriptor{
-    identifier: String
+pub struct CheckAuthMethodRequestDescriptor {
+    identifier: String,
 }
 impl CheckAuthMethodRequestDescriptor {
     pub fn new(identifier: String) -> Self {
@@ -34,7 +32,7 @@ impl StaticGQLDescriptor for CheckAuthMethodRequestDescriptor {
 
 #[derive(Debug, Clone, serde::Deserialize, serde::Serialize, PartialEq)]
 pub struct CheckAuthMethodResponse {
-    pub users_auth_method_aggregate: Aggregate
+    pub users_auth_method_aggregate: Aggregate,
 }
 
 #[derive(Debug, Clone, serde::Deserialize, serde::Serialize, PartialEq)]

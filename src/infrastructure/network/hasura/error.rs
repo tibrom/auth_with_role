@@ -1,7 +1,6 @@
 use std::fmt;
 use thiserror::Error;
 
-
 /// Основная ошибка GraphQL клиента (обёртка)
 #[derive(Debug, Error)]
 pub enum HasuraClientError {
@@ -26,25 +25,23 @@ pub enum HasuraClientError {
     #[error("Failed load query")]
     FailedLoadQuery,
     #[error("{0}")]
-    HasuraResponseError(#[from] HasuraErrorResponse),
+    HasuraResponseError(#[from] HasuraError),
 }
-
 
 /// Ошибка Hasura (десериализуется из тела ответа)
 #[derive(Debug, Clone, serde::Deserialize, serde::Serialize)]
-pub struct HasuraErrorResponse {
+pub struct HasuraError {
     pub message: String,
     pub extensions: HasuraExtension,
 }
 
-impl fmt::Display for HasuraErrorResponse {
+impl fmt::Display for HasuraError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "Hasura error: {}", self.message)
     }
 }
 
-impl std::error::Error for HasuraErrorResponse {}
-
+impl std::error::Error for HasuraError {}
 
 #[derive(Debug, Clone, serde::Deserialize, serde::Serialize)]
 pub struct HasuraExtension {
@@ -58,7 +55,6 @@ pub struct HasuraInternal {
     pub error: HasuraInternalError,
 }
 
-
 #[derive(Debug, Clone, serde::Deserialize, serde::Serialize)]
 pub struct HasuraInternalError {
     pub description: Option<String>,
@@ -67,4 +63,3 @@ pub struct HasuraInternalError {
     pub message: String,
     pub status_code: String,
 }
-

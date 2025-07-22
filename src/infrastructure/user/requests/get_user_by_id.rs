@@ -5,10 +5,8 @@ use super::gql_dir::GQL_DIR;
 
 use crate::domain::user::models::extended::ExtendedAuthMethod;
 
-
-pub struct GetUserByUserIdRequestDescriptor{
-    user_id: Uuid
-
+pub struct GetUserByUserIdRequestDescriptor {
+    user_id: Uuid,
 }
 impl GetUserByUserIdRequestDescriptor {
     pub fn new(user_id: Uuid) -> Self {
@@ -36,5 +34,5 @@ impl StaticGQLDescriptor for GetUserByUserIdRequestDescriptor {
 
 #[derive(Debug, Clone, serde::Deserialize, serde::Serialize, PartialEq)]
 pub struct GetUserByByUserIdResponse {
-    pub users_auth_method: Vec<ExtendedAuthMethod>
-} 
+    pub users_auth_method: Vec<ExtendedAuthMethod>,
+}

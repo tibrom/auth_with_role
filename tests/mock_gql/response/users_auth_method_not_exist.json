@@ -1,0 +1,9 @@
+{
+    "data": {
+        "users_auth_method_aggregate": {
+            "aggregate": {
+                "count": 0
+            }
+        }
+    }
+}

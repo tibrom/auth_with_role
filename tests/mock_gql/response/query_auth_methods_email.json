@@ -1,0 +1,38 @@
+{
+    "data": {
+        "users_auth_method": [
+            {
+                "id": "801bd045-a367-4683-9234-293580264e39",
+                "created_at": "2025-07-10T21:42:33.361658+00:00",
+                "user_id": "801bd045-a367-4683-9234-297586264e39",
+                "auth_type": "email",
+                "identifier": "test@test.test",
+                "secret": "$2b$12$f250KN1RoC1vWQb4webDzu5GTuheDvfe1HA3/ObHjHYAsuc3exEba",
+                "user": {
+                    "id": "801bd045-a367-4683-9234-293580264e39",
+                    "created_at": "2025-07-10T21:42:33.361658+00:00",
+                    "updated_at": "2025-07-10T21:42:33.361658+00:00",
+                    "user_roles": [
+                        {
+                            "id": "801bd045-a367-4683-9234-293580264e39",
+                            "created_at": "2025-07-10T21:42:33.361658+00:00",
+                            "is_default": true,
+                            "role": "test",
+                            "user_id": "801bd045-a367-4683-9234-297586264e39"
+                        }
+                    ],
+                    "user_attributes": [
+                        {
+                            "id": "801bd045-a367-4683-9234-293580264e39",
+                            "created_at": "2025-07-10T21:42:33.361658+00:00",
+                            "updated_at": "2025-07-10T21:42:33.361658+00:00",
+                            "user_id": "801bd045-a367-4683-9234-297586264e39",
+                            "attribute": "test",
+                            "value": "test"
+                        }
+                    ]
+                }
+            }
+        ]
+    }
+}

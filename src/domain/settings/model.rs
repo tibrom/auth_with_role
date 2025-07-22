@@ -28,17 +28,17 @@ pub struct Credentials {
 
 impl Credentials {
     pub fn mock() -> Self {
-        let new_user_role = NewUserRole{
+        let new_user_role = NewUserRole {
             with_email: "TEST".to_string(),
-            with_telegram: "@TEST".to_string()
+            with_telegram: "@TEST".to_string(),
         };
 
         let hasura_credentials = HasuraCredentials {
             x_hasura_default_role: "TEST".to_string(),
             exp: 1,
-            x_hasura_user_id: "TEST".to_string()
+            x_hasura_user_id: "TEST".to_string(),
         };
-        Self { 
+        Self {
             host: "TEST_HOST".to_string(),
             port: 100,
             expiration_access_hours: 100,
@@ -48,12 +48,10 @@ impl Credentials {
             hasura_url: "URL".to_string(),
             hasura_credentials,
             new_user_role,
-            api_key_length: 32
+            api_key_length: 32,
         }
-
     }
 }
-
 
 #[derive(
     Getters, Setters, Debug, Clone, serde::Deserialize, serde::Serialize, PartialEq, Default,

@@ -1,8 +1,6 @@
 use crate::domain::errors::service::AppErrorInfo;
 use std::fmt::Display;
 
-use uuid::Uuid;
-
 pub trait PasswordVerifierService {
     type Error: Display + AppErrorInfo;
     fn is_verified(&self, password_hash: &str, password: &str) -> Result<bool, Self::Error>;
@@ -16,4 +14,3 @@ pub trait ApiKeyVerifierService {
     fn extract_identifier(&self, api_key: &str) -> Result<String, Self::Error>;
     fn create_hash(&self, api_key: &str) -> Result<String, Self::Error>;
 }
- 

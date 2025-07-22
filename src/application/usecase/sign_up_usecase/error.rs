@@ -1,13 +1,10 @@
-use thiserror::Error;
-use crate::application::error_dto::ComponentErrorDTO;
 use crate::domain::errors::service::{AppErrorInfo, ErrorLevel};
+use thiserror::Error;
 
 #[derive(Debug, Error)]
 pub enum UserAttributeError {
     #[error("EmailIsBusy")]
     EmailIsBusy,
-    #[error("Infrastructure Error")]
-    InfrastructureError(ComponentErrorDTO),
     #[error("User not found by {0}")]
     UserNotFound(String),
     #[error("User not found by {0}")]
@@ -17,9 +14,7 @@ pub enum UserAttributeError {
     #[error("Api Key is not verified")]
     NotCorrectApiKey,
     #[error("Password Hash is not verified")]
-    NotCorrectPassword
-
-
+    NotCorrectPassword,
 }
 
 impl UserAttributeError {
@@ -34,25 +29,15 @@ impl UserAttributeError {
 impl AppErrorInfo for UserAttributeError {
     fn client_message(&self) -> String {
         match self {
-            UserAttributeError::InfrastructureError(e) => {
-                e.client_message()
-            }
             UserAttributeError::EmailIsBusy => {
                 format!("This email already is busy")
             }
-            _ => self.msg_not_correct_credentials()
+            _ => self.msg_not_correct_credentials(),
         }
     }
 
     fn level(&self) -> ErrorLevel {
-        match self {
-            UserAttributeError::InfrastructureError(e) => {
-                e.level()
-            }
-            _ => {
-                self.error_level()
-            }
-        }
+        self.error_level()
     }
     fn log_message(&self) -> String {
         match self {
@@ -74,16 +59,6 @@ impl AppErrorInfo for UserAttributeError {
             UserAttributeError::EmailIsBusy => {
                 format!("Try create user with busy email")
             }
-            UserAttributeError::InfrastructureError(e) => {
-                e.log_message()
-            }
         }
-    }
-}
-
-
-pub trait  MapUserAttributeError {
-    fn map_infrastructure_error(e: &dyn AppErrorInfo) -> UserAttributeError {
-        UserAttributeError::InfrastructureError(ComponentErrorDTO::new(e.level(), e.log_message(), e.client_message()))
     }
 }

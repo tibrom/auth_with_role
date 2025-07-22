@@ -1,12 +1,10 @@
-use uuid::Uuid;
-
 use super::super::network::hasura::interface::{ObjectGQLDescriptor, StaticGQLDescriptor};
 use super::gql_dir::GQL_DIR;
 
 use crate::domain::user::models::base::AuthMethod;
 
-pub struct AddAuthMethodDescriptor{
-    auth_method: AuthMethod
+pub struct AddAuthMethodDescriptor {
+    auth_method: AuthMethod,
 }
 impl AddAuthMethodDescriptor {
     pub fn new(auth_method: AuthMethod) -> Self {
@@ -17,7 +15,7 @@ impl AddAuthMethodDescriptor {
 
 impl ObjectGQLDescriptor for AddAuthMethodDescriptor {
     fn variables(&self) -> serde_json::Value {
-        let r =serde_json::json!(
+        let r = serde_json::json!(
             {
                 "auth_type": self.auth_method.auth_type(),
                 "secret": self.auth_method.secret(),
@@ -45,9 +43,8 @@ impl StaticGQLDescriptor for AddAuthMethodDescriptor {
 
 #[derive(Debug, Clone, serde::Deserialize, serde::Serialize, PartialEq)]
 pub struct AddAuthMethodResponse {
-    pub insert_users_auth_method: Returning
+    pub insert_users_auth_method: Returning,
 }
-
 
 #[derive(Debug, Clone, serde::Deserialize, serde::Serialize, PartialEq)]
 pub struct Returning {

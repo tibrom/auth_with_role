@@ -1,13 +1,13 @@
 #[derive(Debug, Clone, serde::Deserialize, serde::Serialize)]
 pub struct HasuraClaims {
     #[serde(rename = "x-hasura-default-role")]
-    x_hasura_default_role: String,
+    pub x_hasura_default_role: String,
 
     #[serde(rename = "x-hasura-allowed-roles")]
-    x_hasura_allowed_roles: Vec<String>,
+    pub x_hasura_allowed_roles: Vec<String>,
 
     #[serde(rename = "x-hasura-user-id")]
-    x_hasura_user_id: String,
+    pub x_hasura_user_id: String,
 }
 impl HasuraClaims {
     pub fn new(
@@ -26,10 +26,10 @@ impl HasuraClaims {
 #[derive(Debug, Clone, serde::Deserialize, serde::Serialize)]
 pub struct Claims {
     pub sub: String,
-    admin: bool,
-    exp: usize,
+    pub admin: bool,
+    pub exp: usize,
     #[serde(rename = "https://hasura.io/jwt/claims")]
-    hasura_claims: HasuraClaims,
+    pub hasura_claims: HasuraClaims,
 }
 
 impl Claims {
@@ -46,7 +46,7 @@ impl Claims {
 #[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
 pub struct RefreshClaims {
     pub sub: String,
-    exp: usize,
+    pub exp: usize,
 }
 
 impl RefreshClaims {

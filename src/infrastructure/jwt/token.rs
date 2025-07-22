@@ -1,15 +1,13 @@
 use jsonwebtoken::{decode, encode, Algorithm, DecodingKey, EncodingKey, Header, Validation};
 
-use super::config::credentials_provider::CredentialsProvider;
 use crate::domain::jwt::model::{Claims, RefreshClaims};
 use crate::domain::jwt::service::TokenService;
 use crate::domain::settings::model::Credentials;
-use crate::domain::settings::service::CredentialsService as _;
 
 use super::error::{JwtError, StageJwtProcessing};
 
-pub struct TokenProvider{
-    credentials: Credentials
+pub struct TokenProvider {
+    credentials: Credentials,
 }
 impl TokenProvider {
     pub fn new(credentials: Credentials) -> Self {
@@ -76,7 +74,6 @@ impl TokenService for TokenProvider {
     }
 }
 
-
 #[cfg(test)]
 mod tests {
     use chrono::{Duration, Utc};
@@ -89,14 +86,15 @@ mod tests {
         SystemTime::now()
             .duration_since(UNIX_EPOCH)
             .unwrap()
-            .as_secs() as usize + seconds_from_now as usize
+            .as_secs() as usize
+            + seconds_from_now as usize
     }
 
     fn mock_hasura_claims() -> HasuraClaims {
         HasuraClaims::new(
             "TEST".to_string(),
             vec!["TEST".to_string()],
-            "user123".to_string()
+            "user123".to_string(),
         )
     }
 
@@ -117,7 +115,9 @@ mod tests {
         let provider = TokenProvider::new(Credentials::mock());
 
         let claims = mock_claims();
-        let token = provider.generate_access(claims.clone()).expect("Token creation failed");
+        let token = provider
+            .generate_access(claims.clone())
+            .expect("Token creation failed");
         let validated_claims = provider.validate_access(&token).expect("Validation failed");
 
         assert_eq!(validated_claims.sub, claims.sub);
@@ -128,8 +128,12 @@ mod tests {
         let provider = TokenProvider::new(Credentials::mock());
 
         let claims = mock_refresh_claims();
-        let token = provider.generate_refresh(claims.clone()).expect("Token creation failed");
-        let validated_claims = provider.validate_refresh(&token).expect("Validation failed");
+        let token = provider
+            .generate_refresh(claims.clone())
+            .expect("Token creation failed");
+        let validated_claims = provider
+            .validate_refresh(&token)
+            .expect("Validation failed");
 
         assert_eq!(validated_claims.sub, claims.sub);
     }
@@ -141,4 +145,5 @@ mod tests {
 
         assert!(result.is_err());
     }
+
 }

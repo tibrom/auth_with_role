@@ -1,12 +1,10 @@
-use uuid::Uuid;
-
 use super::super::network::hasura::interface::{ObjectGQLDescriptor, StaticGQLDescriptor};
 use super::gql_dir::GQL_DIR;
 
 use crate::domain::user::models::base::UserRole;
 
-pub struct AddRoleRequestDescriptor{
-    user_role: UserRole
+pub struct AddRoleRequestDescriptor {
+    user_role: UserRole,
 }
 impl AddRoleRequestDescriptor {
     pub fn new(user_role: UserRole) -> Self {
@@ -40,9 +38,8 @@ impl StaticGQLDescriptor for AddRoleRequestDescriptor {
 
 #[derive(Debug, Clone, serde::Deserialize, serde::Serialize, PartialEq)]
 pub struct AddRoleResponse {
-    pub insert_users_user_role: Returning
+    pub insert_users_user_role: Returning,
 }
-
 
 #[derive(Debug, Clone, serde::Deserialize, serde::Serialize, PartialEq)]
 pub struct Returning {

@@ -28,8 +28,6 @@ impl PasswordVerifierService for PasswordVerifier {
     }
 }
 
-
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -56,4 +54,3 @@ mod tests {
         assert!(!is_valid);
     }
 }
-

@@ -2,7 +2,6 @@ use chrono::{DateTime, FixedOffset};
 use getset::{Getters, Setters};
 use uuid::Uuid;
 
-
 #[derive(Getters, Setters, Debug, Clone, serde::Deserialize, serde::Serialize, PartialEq)]
 pub struct User {
     #[get = "pub"]
@@ -12,7 +11,6 @@ pub struct User {
     #[get = "pub"]
     updated_at: Option<DateTime<FixedOffset>>,
 }
-
 
 #[derive(Getters, Setters, Debug, Clone, serde::Deserialize, serde::Serialize, PartialEq)]
 pub struct AuthMethod {
@@ -42,11 +40,10 @@ impl AuthMethod {
             user_id,
             auth_type,
             identifier,
-            secret
+            secret,
         }
     }
 }
-
 
 #[derive(Getters, Setters, Debug, Clone, serde::Deserialize, serde::Serialize, PartialEq)]
 pub struct UserRole {
@@ -68,11 +65,10 @@ impl UserRole {
             created_at: None,
             is_default,
             role,
-            user_id
+            user_id,
         }
     }
 }
-
 
 #[derive(Getters, Setters, Debug, Clone, serde::Deserialize, serde::Serialize, PartialEq)]
 pub struct UserAttribute {
@@ -92,24 +88,23 @@ pub struct UserAttribute {
 
 impl UserAttribute {
     pub fn new(user_id: Uuid, attribute: String, value: String) -> Self {
-        Self { 
+        Self {
             id: None,
             created_at: None,
             updated_at: None,
             user_id,
             attribute,
-            value
+            value,
         }
     }
 }
-
 
 #[derive(Getters, Setters, Debug, Clone, serde::Deserialize, serde::Serialize, PartialEq)]
 pub struct Attribute {
     #[get = "pub"]
     is_required: bool,
     #[get = "pub"]
-	is_unique: bool,
+    is_unique: bool,
     #[get = "pub"]
-	value: String
+    value: String,
 }

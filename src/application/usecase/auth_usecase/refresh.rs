@@ -1,20 +1,22 @@
 use uuid::Uuid;
 
-use crate::domain::errors::service::AppErrorInfo;
+use crate::application::error_ext::ServiceErrorExt;
+use crate::application::usecase::auth_usecase::dto::{LoginEmailPasResponseDto, RefreshTokenRequestDto};
+use crate::domain::errors::service::{AppErrorInfo, ErrorLevel};
 use crate::domain::jwt::service::{JwtClaimsService, TokenService};
 use crate::domain::user::service::QueryUserService;
 use crate::domain::verifies::service::PasswordVerifierService;
 
 use crate::domain::jwt::factories::JWTProviderFactory;
-use crate::domain::verifies::factories::VerifiesProviderFactory;
 use crate::domain::user::factories::UserProviderFactory;
+use crate::domain::verifies::factories::VerifiesProviderFactory;
 
-use crate::application::error_dto::ComponentErrorDTO;
 
-use super::error::AuthenticatorError;
+
 use super::dto::TokenPairDto;
+use super::error::AuthenticatorError;
 
-pub struct RefreshJwtAction<Q, V, CP, TP> {
+pub struct RefreshTokenUseCase<Q, V, CP, TP> {
     user_provider: Q,
     password_verifier: V,
     claims_provider: CP,
@@ -22,7 +24,10 @@ pub struct RefreshJwtAction<Q, V, CP, TP> {
 }
 
 
-impl<Q, V, CP, TP> RefreshJwtAction<Q, V, CP, TP>
+impl<Q, V, CP, TP> ServiceErrorExt for RefreshTokenUseCase<Q, V, CP, TP> {}
+
+
+impl<Q, V, CP, TP> RefreshTokenUseCase<Q, V, CP, TP>
 where
     V: PasswordVerifierService,
     TP: TokenService,
@@ -37,7 +42,7 @@ where
     where
         T: JWTProviderFactory<Claims = CP, Tokens = TP>,
         P: VerifiesProviderFactory<PasswordVerifier = V>,
-        U: UserProviderFactory<QueryUser = Q>
+        U: UserProviderFactory<QueryUser = Q>,
     {
         let claims_provider = jwtprovider_factory.claims_service();
         let token_provider = jwtprovider_factory.token_service();
@@ -51,55 +56,60 @@ where
         }
     }
 
-    pub async fn execute(
-        &self,
-        refresh_token: String,
-    ) -> Result<TokenPairDto, AuthenticatorError> {
-        let refresh_claims = self.token_provider.validate_refresh(&refresh_token)
-            .map_err(|e| Self::map_infrastructure_error(&e))?;
+    pub async fn execute(&self, dto: RefreshTokenRequestDto) -> Result<LoginEmailPasResponseDto, String> {
+        let refresh_claims =  match self.token_provider.validate_refresh(&dto.refresh_token){
+            Ok(v) => v,
+            Err(e) => return self.handler_error(e)
+        };
 
-        let user_id = Uuid::try_parse(&refresh_claims.sub)
-            .map_err(|e| AuthenticatorError::NotCorrectRefreshToken)?;
+        let user_id = match Uuid::try_parse(&refresh_claims.sub) {
+            Ok(v) => v,
+            Err(e) => return self.handler_error(AuthenticatorError::NotCorrectRefreshToken)
+        };
 
         let user = match self.user_provider.get_user_by_id(user_id.clone()).await {
             Ok(Some(user)) => user,
-            Ok(None) => return Err(AuthenticatorError::UserNotFound(user_id.to_string())),
-            Err(e) => return self.infrastructure_error(&e)
+            Ok(None) => return self.handler_error(AuthenticatorError::UserNotFound(user_id.to_string())),
+            Err(e) => return self.handler_error(e),
         };
 
         let claims = match self.claims_provider.access_claims(&user) {
             Ok(v) => v,
-            Err(e) => return self.infrastructure_error(&e)
+            Err(e) => return self.handler_error(e),
         };
 
         let refresh_claims = match self.claims_provider.refresh_claims(&user) {
             Ok(v) => v,
-            Err(e) => return self.infrastructure_error(&e)
+            Err(e) => return self.handler_error(e),
         };
 
         let access_token = match self.token_provider.generate_access(claims) {
             Ok(v) => v,
-            Err(e) => return self.infrastructure_error(&e)
+            Err(e) => return self.handler_error(e),
         };
 
         let refresh_token = match self.token_provider.generate_refresh(refresh_claims) {
             Ok(v) => v,
-            Err(e) => return self.infrastructure_error(&e)
+            Err(e) => return self.handler_error(e),
         };
 
         let token_pair = TokenPairDto {
             access_token,
             refresh_token: Some(refresh_token),
         };
-        Ok(token_pair)
+
+        Ok(LoginEmailPasResponseDto::Success {
+            auth_data: token_pair,
+        })
+        
     }
 
-
-    fn infrastructure_error(&self, e: &dyn AppErrorInfo) -> Result<TokenPairDto, AuthenticatorError> {
-        Err(AuthenticatorError::InfrastructureError(ComponentErrorDTO::new(e.level(), e.log_message(), e.client_message())))
-    }
-
-    fn map_infrastructure_error(e: &dyn AppErrorInfo) -> AuthenticatorError {
-        AuthenticatorError::InfrastructureError(ComponentErrorDTO::new(e.level(), e.log_message(), e.client_message()))
+    fn handler_error<E: AppErrorInfo>(&self, e: E) -> Result<LoginEmailPasResponseDto, String> {
+        match e.level() {
+            ErrorLevel::Info | ErrorLevel::Warning => Ok(LoginEmailPasResponseDto::Error {
+                err_msg: self.map_service_error(e),
+            }),
+            _ => Err(self.map_service_error(e)),
+        }
     }
 }

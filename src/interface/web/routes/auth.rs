@@ -1,6 +1,8 @@
-use crate::application::usecase::auth_usecase::dto::CreateApiKeyRequestDto;
+use crate::application::usecase::sign_up_usecase::dto::{
+    CreateApiKeyRequestDto, SignUpRequestDto
+};
 use crate::application::usecase::auth_usecase::dto::{
-    LoginApiKeyRequestDto, LoginEmailPasRequestDto, RefreshTokenRequestDto
+    LoginApiKeyRequestDto, LoginEmailPasRequestDto, RefreshTokenRequestDto,
 };
 use crate::interface::web::state::AppState;
 use actix_web::{post, web, HttpResponse, Responder};
@@ -11,7 +13,7 @@ pub async fn login(
     payload: web::Json<LoginEmailPasRequestDto>,
 ) -> impl Responder {
     let dto = payload.into_inner();
-    let result = data.login_use_case.clone().login(dto).await;
+    let result = data.login_with_email_passwd_use_case.clone().execute(dto).await;
 
     match result {
         Ok(v) => HttpResponse::Ok().json(v),
@@ -37,14 +39,13 @@ pub async fn refresh(
     }
 }
 
-
 #[post("/loginapikey")]
 pub async fn loginapikey(
     data: web::Data<AppState>,
     payload: web::Json<LoginApiKeyRequestDto>,
 ) -> impl Responder {
     let dto = payload.into_inner();
-    let result = data.login_api_key_use_case.clone().login(dto).await;
+    let result = data.login_with_api_key_use_case.clone().execute(dto).await;
 
     match result {
         Ok(v) => HttpResponse::Ok().json(v),
@@ -61,9 +62,9 @@ pub async fn createapikey(
 ) -> impl Responder {
     let dto = payload.into_inner();
     let result = data
-        .create_apikey_use_case
+        .create_api_key_use_case
         .clone()
-        .create_api_key(dto)
+        .execute(dto)
         .await;
 
     match result {

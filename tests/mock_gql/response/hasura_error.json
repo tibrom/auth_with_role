@@ -1,0 +1,11 @@
+{
+    "errors": [
+        {
+            "message": "unexpected null value for type 'String'",
+            "extensions": {
+                "path": "$.selectionSet.insert_users_auth_method.args.objects[0].auth_type",
+                "code": "validation-failed"
+            }
+        }
+    ]
+}

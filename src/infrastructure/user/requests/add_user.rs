@@ -1,11 +1,11 @@
 use super::super::network::hasura::interface::{ObjectGQLDescriptor, StaticGQLDescriptor};
 use super::gql_dir::GQL_DIR;
 
-use crate::domain::user::models::base::{User};
+use crate::domain::user::models::base::User;
 
 pub struct AddUserRequestDescriptor;
 
-impl ObjectGQLDescriptor for AddUserRequestDescriptor{}
+impl ObjectGQLDescriptor for AddUserRequestDescriptor {}
 
 impl StaticGQLDescriptor for AddUserRequestDescriptor {
     fn filename(&self) -> &'static str {
@@ -21,10 +21,10 @@ impl StaticGQLDescriptor for AddUserRequestDescriptor {
 
 #[derive(Debug, Clone, serde::Deserialize, serde::Serialize, PartialEq)]
 pub struct AddUserResponse {
-    pub insert_users_user: Returning
+    pub insert_users_user: Returning,
 }
 
 #[derive(Debug, Clone, serde::Deserialize, serde::Serialize, PartialEq)]
 pub struct Returning {
-    pub returning: Vec<User>
+    pub returning: Vec<User>,
 }

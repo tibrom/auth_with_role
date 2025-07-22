@@ -1,6 +1,5 @@
 pub mod client;
-pub mod interface;
 pub mod error;
+pub mod interface;
 
-use super::http::client::HttpClient;
 use super::http::interface::HttpClientInterface;
