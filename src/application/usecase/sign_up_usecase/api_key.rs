@@ -53,7 +53,7 @@ where
         &self,
         sing_up_user: CreateApiKeyRequestDto
     ) -> Result<CreateApiKeyResponseDto, String> {
-        let user = match self.query_user_service.get_user_by_identifier(&sing_up_user.email).await {
+        let user = match self.query_user_service.get_user_by_identifier(&sing_up_user.email, AUTH_TYPE).await {
             Ok(Some(user)) => user,
             Ok(None) => return self.handler_error(UserAttributeError::UserNotFound(sing_up_user.email)),
             Err(e) => return self.handler_error(e),
@@ -79,7 +79,7 @@ where
             Err(e) => return self.handler_error(e),
         };
 
-        let identifier_is = match self.command_user_service.auth_identifier_is_free(identifier.clone()).await {
+        let identifier_is = match self.command_user_service.auth_identifier_is_free(identifier.clone(), AUTH_TYPE).await {
             Ok(v) => v,
             Err(e) => return self.handler_error(e),
         };

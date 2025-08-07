@@ -12,6 +12,8 @@ use crate::domain::verifies::factories::VerifiesProviderFactory;
 use super::dto::TokenPairDto;
 use super::error::AuthenticatorError;
 
+const AUTH_TYPE: &str = "apikey";
+
 pub struct LoginWithApiKeyUseCase<Q, A, CP, TP> {
     query_user_service: Q,
     api_key_verifier: A,
@@ -60,7 +62,7 @@ where
 
         let user = match self
             .query_user_service
-            .get_user_by_identifier(&identifier)
+            .get_user_by_identifier(&identifier, AUTH_TYPE)
             .await
         {
             Ok(Some(v)) => v,

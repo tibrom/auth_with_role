@@ -1,5 +1,5 @@
-query GetAuthMethodByIdentifier($identifier: String) {
-  users_auth_method(where: {identifier: {_eq: $identifier}}) {
+query GetAuthMethodByIdentifier($identifier: String, $auth_type: String) {
+  users_auth_method(where: {_and: {identifier: {_eq: $identifier}, auth_type: {_eq: $auth_type}}}) {
     auth_type
     identifier
     secret

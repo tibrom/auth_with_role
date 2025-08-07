@@ -1,7 +1,7 @@
 use uuid::Uuid;
 
 use crate::application::error_ext::ServiceErrorExt;
-use crate::application::usecase::auth_usecase::dto::{LoginEmailPasResponseDto, RefreshTokenRequestDto};
+use crate::application::usecase::auth_usecase::dto::{JwtResponseDto, RefreshTokenRequestDto};
 use crate::domain::errors::service::{AppErrorInfo, ErrorLevel};
 use crate::domain::jwt::service::{JwtClaimsService, TokenService};
 use crate::domain::user::service::QueryUserService;
@@ -56,7 +56,7 @@ where
         }
     }
 
-    pub async fn execute(&self, dto: RefreshTokenRequestDto) -> Result<LoginEmailPasResponseDto, String> {
+    pub async fn execute(&self, dto: RefreshTokenRequestDto) -> Result<JwtResponseDto, String> {
         let refresh_claims =  match self.token_provider.validate_refresh(&dto.refresh_token){
             Ok(v) => v,
             Err(e) => return self.handler_error(e)
@@ -67,10 +67,13 @@ where
             Err(e) => return self.handler_error(AuthenticatorError::NotCorrectRefreshToken)
         };
 
-        let user = match self.user_provider.get_user_by_id(user_id.clone()).await {
-            Ok(Some(user)) => user,
-            Ok(None) => return self.handler_error(AuthenticatorError::UserNotFound(user_id.to_string())),
+        let user_data = match self.user_provider.get_user_by_id(user_id.clone()).await {
+            Ok(v) => v,
             Err(e) => return self.handler_error(e),
+        };
+
+        let Some(user) = user_data.first() else {
+            return self.handler_error(AuthenticatorError::UserNotFound(user_id.to_string()));
         };
 
         let claims = match self.claims_provider.access_claims(&user) {
@@ -98,15 +101,15 @@ where
             refresh_token: Some(refresh_token),
         };
 
-        Ok(LoginEmailPasResponseDto::Success {
+        Ok(JwtResponseDto::Success {
             auth_data: token_pair,
         })
         
     }
 
-    fn handler_error<E: AppErrorInfo>(&self, e: E) -> Result<LoginEmailPasResponseDto, String> {
+    fn handler_error<E: AppErrorInfo>(&self, e: E) -> Result<JwtResponseDto, String> {
         match e.level() {
-            ErrorLevel::Info | ErrorLevel::Warning => Ok(LoginEmailPasResponseDto::Error {
+            ErrorLevel::Info | ErrorLevel::Warning => Ok(JwtResponseDto::Error {
                 err_msg: self.map_service_error(e),
             }),
             _ => Err(self.map_service_error(e)),

@@ -5,16 +5,17 @@ use crate::domain::user::models::extended::ExtendedAuthMethod;
 
 pub struct GetUserByIdentifierRequestDescriptor {
     identifier: String,
+    auth_type: String,
 }
 impl GetUserByIdentifierRequestDescriptor {
-    pub fn new(email: String) -> Self {
-        Self { identifier: email }
+    pub fn new(identifier: String, auth_type: String) -> Self {
+        Self { identifier, auth_type }
     }
 }
 
 impl ObjectGQLDescriptor for GetUserByIdentifierRequestDescriptor {
     fn variables(&self) -> serde_json::Value {
-        serde_json::json!({ "identifier": self.identifier})
+        serde_json::json!({ "identifier": self.identifier, "auth_type": self.auth_type })
     }
 }
 

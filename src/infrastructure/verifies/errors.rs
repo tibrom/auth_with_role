@@ -71,3 +71,21 @@ impl AppErrorInfo for ApiKeyVerifierError {
         }
     }
 }
+
+
+
+#[derive(Debug, Error)]
+pub enum TelegramVerifierError {
+}
+
+impl AppErrorInfo for TelegramVerifierError {
+    fn client_message(&self) -> String {
+        "Internal Server Error".to_string()
+    }
+    fn level(&self) -> ErrorLevel {
+        ErrorLevel::Error
+    }
+    fn log_message(&self) -> String {
+        "Internal Server Error".to_string()
+    }
+}

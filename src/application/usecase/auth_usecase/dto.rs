@@ -6,7 +6,7 @@ pub struct LoginEmailPasRequestDto {
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 #[serde(tag = "status", rename_all = "lowercase")] // JSON: "success", "error"
-pub enum LoginEmailPasResponseDto {
+pub enum JwtResponseDto {
     Success { auth_data: TokenPairDto },
     Error { err_msg: String },
 }

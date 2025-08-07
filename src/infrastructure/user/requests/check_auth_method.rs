@@ -3,17 +3,18 @@ use super::gql_dir::GQL_DIR;
 
 pub struct CheckAuthMethodRequestDescriptor {
     identifier: String,
+    auth_type: String,
 }
 impl CheckAuthMethodRequestDescriptor {
-    pub fn new(identifier: String) -> Self {
-        Self { identifier }
+    pub fn new(identifier: String, auth_type: String) -> Self {
+        Self { identifier, auth_type }
     }
 }
 
 impl ObjectGQLDescriptor for CheckAuthMethodRequestDescriptor {
     fn variables(&self) -> serde_json::Value {
         serde_json::json!(
-            {"identifier": self.identifier}
+            {"identifier": self.identifier, "auth_type": self.auth_type}
         )
     }
 }

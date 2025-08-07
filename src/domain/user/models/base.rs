@@ -12,8 +12,15 @@ pub struct User {
     updated_at: Option<DateTime<FixedOffset>>,
 }
 
+impl User {
+    pub fn new(id: Uuid, created_at: DateTime<FixedOffset>, updated_at: Option<DateTime<FixedOffset>> ) -> Self {
+        Self { id, created_at, updated_at }
+    }
+}
+
 #[derive(Getters, Setters, Debug, Clone, serde::Deserialize, serde::Serialize, PartialEq)]
 pub struct AuthMethod {
+    #[get = "pub"]
     id: Option<Uuid>,
     #[get = "pub"]
     created_at: Option<DateTime<FixedOffset>>,
