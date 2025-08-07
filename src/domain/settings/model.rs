@@ -24,6 +24,8 @@ pub struct Credentials {
     new_user_role: NewUserRole,
     #[get = "pub"]
     api_key_length: u16,
+    #[get = "pub"]
+    bot_token: String
 }
 
 impl Credentials {
@@ -49,6 +51,7 @@ impl Credentials {
             hasura_credentials,
             new_user_role,
             api_key_length: 32,
+            bot_token: "TEST".to_string()
         }
     }
 }

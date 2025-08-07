@@ -54,7 +54,7 @@ where
             Err(e) => return self.handler_error(e)
         };
 
-        let is_free_email = match self.command_user_service.auth_identifier_is_free(user.email.clone()).await {
+        let is_free_email = match self.command_user_service.auth_identifier_is_free(user.email.clone(), AUTH_TYPE).await {
             Ok(v) => v,
             Err(e) => return self.handler_error(e)
         };

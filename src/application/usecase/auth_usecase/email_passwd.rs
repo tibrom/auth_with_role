@@ -1,5 +1,5 @@
 use crate::application::error_ext::ServiceErrorExt;
-use crate::application::usecase::auth_usecase::dto::{LoginEmailPasRequestDto, LoginEmailPasResponseDto};
+use crate::application::usecase::auth_usecase::dto::{LoginEmailPasRequestDto, JwtResponseDto};
 use crate::domain::errors::service::{AppErrorInfo, ErrorLevel};
 use crate::domain::jwt::service::{JwtClaimsService, TokenService};
 use crate::domain::user::service::QueryUserService;
@@ -12,7 +12,7 @@ use crate::domain::verifies::factories::VerifiesProviderFactory;
 
 use super::dto::TokenPairDto;
 use super::error::AuthenticatorError;
-
+use super::constants::AUTH_TYPE;
 
 
 
@@ -58,9 +58,9 @@ where
     pub async fn execute(
         &self,
         dto: LoginEmailPasRequestDto,
-    ) -> Result<LoginEmailPasResponseDto, String> {
+    ) -> Result<JwtResponseDto, String> {
         println!("1");
-        let user = match self.user_provider.get_user_by_identifier(&dto.email).await {
+        let user = match self.user_provider.get_user_by_identifier(&dto.email, AUTH_TYPE).await {
             Ok(Some(user)) => user,
             Ok(None) => return self.handler_error(AuthenticatorError::UserNotFound(dto.email)),
             Err(e) => return self.handler_error(e)
@@ -108,14 +108,14 @@ where
         };
 
 
-        Ok(LoginEmailPasResponseDto::Success {
+        Ok(JwtResponseDto::Success {
             auth_data: token_pair,
         })
     }
 
-    fn handler_error<E: AppErrorInfo>(&self, e: E) -> Result<LoginEmailPasResponseDto, String> {
+    fn handler_error<E: AppErrorInfo>(&self, e: E) -> Result<JwtResponseDto, String> {
         match e.level() {
-            ErrorLevel::Info | ErrorLevel::Warning => Ok(LoginEmailPasResponseDto::Error {
+            ErrorLevel::Info | ErrorLevel::Warning => Ok(JwtResponseDto::Error {
                 err_msg: self.map_service_error(e),
             }),
             _ => Err(self.map_service_error(e)),
@@ -169,7 +169,7 @@ mod tests {
         assert!(result.is_ok());
 
         let is_correct = match result.unwrap() {
-            LoginEmailPasResponseDto::Success{..} => true,
+            JwtResponseDto::Success{..} => true,
             _ => false
         };
         assert!(is_correct)
@@ -207,7 +207,7 @@ mod tests {
         assert!(result.is_ok());
 
         let is_correct_err = match result.unwrap() {
-            LoginEmailPasResponseDto::Error{err_msg} => {
+            JwtResponseDto::Error{err_msg} => {
                 let error = AuthenticatorError::UserNotFound(email).client_message();
                 err_msg == error
             },

@@ -10,14 +10,16 @@ pub trait QueryUserService {
     async fn get_user_by_identifier(
         &self,
         identifier: &str,
+        auth_type: &str,
+
     ) -> Result<Option<ExtendedAuthMethod>, Self::Error>;
-    async fn get_user_by_id(&self, id: Uuid) -> Result<Option<ExtendedAuthMethod>, Self::Error>;
+    async fn get_user_by_id(&self, id: Uuid) -> Result<Vec<ExtendedAuthMethod>, Self::Error>;
 }
 
 pub trait CommandUserService {
     type Error: std::fmt::Display + AppErrorInfo;
 
-    async fn auth_identifier_is_free(&self, identifier: String) -> Result<bool, Self::Error>;
+    async fn auth_identifier_is_free(&self, identifier: String, auth_type: &str) -> Result<bool, Self::Error>;
     async fn add_user(&self) -> Result<User, Self::Error>;
     async fn add_role(&self, user_role: UserRole) -> Result<UserRole, Self::Error>;
     async fn add_user_attribute(

@@ -31,10 +31,10 @@ impl <T: HttpClientInterface + Clone> UserCommand <T> {
 impl <T: HttpClientInterface + Clone> CommandUserService for UserCommand <T> {
     type Error = UserManagerError;
 
-    async fn auth_identifier_is_free(&self, identifier: String) -> Result<bool, Self::Error> {
+    async fn auth_identifier_is_free(&self, identifier: String, auth_type:&str ) -> Result<bool, Self::Error> {
         let mut client = self.hasura_client.clone();
 
-        let descriptor = CheckAuthMethodRequestDescriptor::new(identifier);
+        let descriptor = CheckAuthMethodRequestDescriptor::new(identifier, auth_type.to_owned());
 
         let result = client
             .execute::<CheckAuthMethodRequestDescriptor, CheckAuthMethodResponse>(&descriptor)
@@ -132,10 +132,11 @@ impl <T: HttpClientInterface + Clone> QueryUserService for UserQuery<T> {
     async fn get_user_by_identifier(
         &self,
         identifier: &str,
+        auth_type: &str,
     ) -> Result<Option<ExtendedAuthMethod>, Self::Error> {
         let mut client = self.hasura_client.clone();
 
-        let descriptor = GetUserByIdentifierRequestDescriptor::new(identifier.to_owned());
+        let descriptor = GetUserByIdentifierRequestDescriptor::new(identifier.to_owned(), auth_type.to_owned());
 
         let result = client
             .execute::<GetUserByIdentifierRequestDescriptor, GetUserByByIdentifierResponse>(
@@ -153,7 +154,7 @@ impl <T: HttpClientInterface + Clone> QueryUserService for UserQuery<T> {
     async fn get_user_by_id(
         &self,
         id: uuid::Uuid,
-    ) -> Result<Option<ExtendedAuthMethod>, Self::Error> {
+    ) -> Result<Vec<ExtendedAuthMethod>, Self::Error> {
         let mut client = self.hasura_client.clone();
         let descriptor = GetUserByUserIdRequestDescriptor::new(id.to_owned());
 
@@ -162,10 +163,7 @@ impl <T: HttpClientInterface + Clone> QueryUserService for UserQuery<T> {
             .await
             .map_err(|e| UserManagerError::HasuraClientError(e))?;
 
-        Ok(result
-            .users_auth_method
-            .first()
-            .and_then(|v| Some(v.clone())))
+        Ok(result.users_auth_method)
     }
 }
 
@@ -203,7 +201,7 @@ mod tests {
         let credentials = mock_credentials();
         let user_command = UserCommand::new(credentials, hasura_client);
 
-        let result = user_command.auth_identifier_is_free(identifier).await;
+        let result = user_command.auth_identifier_is_free(identifier, "email").await;
 
         assert!(result.is_ok());
         assert!(result.unwrap())
@@ -290,7 +288,7 @@ mod tests {
         let credentials = mock_credentials();
         let user_command = UserQuery::new(credentials, hasura_client);
 
-        let result = user_command.get_user_by_identifier(&identifier).await;
+        let result = user_command.get_user_by_identifier(&identifier, "email").await;
 
         assert!(result.is_ok());
         assert!(result.unwrap().is_some());
@@ -310,7 +308,7 @@ mod tests {
         let result = user_command.get_user_by_id(id).await;
 
         assert!(result.is_ok());
-        assert!(result.unwrap().is_some());
+        assert!(result.unwrap().first().is_some());
     }
 
 
