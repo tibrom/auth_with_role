@@ -1,0 +1,7 @@
+query GetAttribute {
+  users_attribute {
+    is_required
+		is_unique
+		value
+  }
+}

@@ -1,0 +1,12 @@
+mutation InsertUsersAuthMethod($auth_type: String, $identifier: String, $secret: String, $user_id: uuid) {
+  insert_users_auth_method(objects: {auth_type: $auth_type, identifier: $identifier, secret: $secret, user_id: $user_id}) {
+    returning {
+      auth_type
+      created_at
+      id
+      user_id
+      secret
+      identifier
+    }
+  }
+}

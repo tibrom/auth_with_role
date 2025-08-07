@@ -1,0 +1,30 @@
+query GetAuthMethodByIdentifier($identifier: String, $auth_type: String) {
+  users_auth_method(where: {_and: {identifier: {_eq: $identifier}, auth_type: {_eq: $auth_type}}}) {
+    auth_type
+    identifier
+    secret
+    created_at
+    id
+    user_id
+    user {
+      id
+      created_at
+      updated_at
+      user_attributes {
+        id
+        updated_at
+        user_id
+        created_at
+        value
+        attribute
+      }
+      user_roles {
+        created_at
+        id
+        is_default
+        role
+        user_id
+      }
+    }
+  }
+}

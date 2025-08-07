@@ -1,0 +1,53 @@
+###
+POST http://extrabot.ru/auth/login HTTP/1.1
+content-type: application/json
+
+{
+    "email": "gorlans3@mail.ru",
+    "password": "12345678"
+}
+###
+
+POST http://127.0.0.1:8081/auth/refresh HTTP/1.1
+content-type: application/json
+
+{
+    "refresh_token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiI4MDFiZDA0NS1hMzY3LTQ2ODMtOTIzNC0yOTM1ODAyNjRlMzkiLCJleHAiOjE3NTIzNTkwMTh9.SOFRbwzuwi6KzV2OEhskdejIe6LHprmOf4RG8R1Un9Y"
+}
+###
+
+POST http://127.0.0.1:8081/signup HTTP/1.1
+content-type: application/json
+
+{
+    "username": "Andrei",
+    "email": "gorlans3@mail.ru",
+    "password": "12345678"
+}
+###
+
+POST http://127.0.0.1:8081/createapikey HTTP/1.1
+content-type: application/json
+
+{
+    "email": "gorlans3@mail.ru",
+    "password": "12345678"
+}
+###
+
+
+POST http://127.0.0.1:8081/auth/loginapikey HTTP/1.1
+content-type: application/json
+
+{
+    "api_key": "EAWr1bjwJK-B1L134YGGM"
+}
+###
+
+POST http://127.0.0.1:8081/empty HTTP/1.1
+content-type: application/json
+
+{
+    "email": "user@example.com",
+    "password": "securepassword"
+}

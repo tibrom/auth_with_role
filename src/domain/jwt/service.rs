@@ -1,0 +1,27 @@
+use super::model::{Claims, RefreshClaims};
+use crate::domain::errors::service::AppErrorInfo;
+
+use super::ExtendedAuthMethod;
+
+pub trait JwtClaimsService {
+    type Error: AppErrorInfo;
+
+    fn access_claims(
+        &self,
+        extended_auth_method: &ExtendedAuthMethod,
+    ) -> Result<Claims, Self::Error>;
+    fn refresh_claims(
+        &self,
+        extended_auth_method: &ExtendedAuthMethod,
+    ) -> Result<RefreshClaims, Self::Error>;
+    fn inner_access_claims(&self) -> Result<Claims, Self::Error>;
+}
+
+pub trait TokenService: Send + Sync {
+    type Error: AppErrorInfo;
+
+    fn generate_access(&self, claims: Claims) -> Result<String, Self::Error>;
+    fn generate_refresh(&self, claims: RefreshClaims) -> Result<String, Self::Error>;
+    fn validate_access(&self, token: &str) -> Result<Claims, Self::Error>;
+    fn validate_refresh(&self, token: &str) -> Result<RefreshClaims, Self::Error>;
+}
