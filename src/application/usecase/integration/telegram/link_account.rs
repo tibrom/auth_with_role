@@ -1,23 +1,25 @@
 use std::str::FromStr;
-
 use uuid::Uuid;
 
 use crate::application::error_ext::ServiceErrorExt;
-use crate::application::usecase::auth_usecase::dto::{LoginEmailPasRequestDto, JwtResponseDto, TokenPairDto};
-
+use crate::application::usecase::auth_usecase::dto::{JwtResponseDto, TokenPairDto};
 use crate::application::usecase::integration::telegram::errors::LinkAccountError;
-use crate::domain::errors::service::{AppErrorInfo, ErrorLevel};
-use crate::domain::jwt::service::{JwtClaimsService, TokenService};
-use crate::domain::settings::model::Credentials;
-use crate::domain::user::models::base::{AuthMethod, User, UserAttribute};
-use crate::domain::user::models::extended::{ExtendedAuthMethod, ExtendedUser};
-use crate::domain::user::service::{QueryUserService, CommandUserService};
-use crate::domain::verifies::model::TelegramData;
-use crate::domain::verifies::service::{PasswordVerifierService, TelegramVerifierService};
 
+use crate::domain::errors::service::{AppErrorInfo, ErrorLevel};
+
+use crate::domain::jwt::service::{JwtClaimsService, TokenService};
 use crate::domain::jwt::factories::JWTProviderFactory;
+
+use crate::domain::settings::model::Credentials;
+
+use crate::domain::user::models::extended::ExtendedUser;
+use crate::domain::user::service::{QueryUserService, CommandUserService};
 use crate::domain::user::factories::UserProviderFactory;
+
+use crate::domain::verifies::model::TelegramData;
+use crate::domain::verifies::service::TelegramVerifierService;
 use crate::domain::verifies::factories::VerifiesProviderFactory;
+
 
 
 use super::dto::TelegramDataDTO;
