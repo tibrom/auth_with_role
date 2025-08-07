@@ -108,9 +108,15 @@ async fn main() -> std::io::Result<()> {
                     .service(loginapikey)
                     .service(refresh)
                     .service(link_telegram)
+                    .service(signup)
+                    .service(signup)
+                    .service(
+                        web::scope("/integration")
+                            .service(link_telegram)
+                    )
             )
-            .service(signup)
-            .service(createapikey)
+            
+        
     })
     .bind((host.clone(), port))?
     .run()
