@@ -14,7 +14,10 @@ use crate::application::usecase::{
         api_key::CreateApiKeyUseCase,
         email_passwd::SignUpWithEmailUseCase
     },
-    integration::telegram::link_account::LinkTelegramAccountUseCase,
+    integration::telegram::{
+        link_account::LinkTelegramAccountUseCase,
+        auth::AuthTelegramUseCase,
+    }
 };
 
 use crate::domain::settings::service::CredentialsService as _;
@@ -29,7 +32,10 @@ use actix_web::{web, App, HttpServer};
 use interface::web::routes::auth::createapikey;
 use interface::web::routes::auth::{login, loginapikey, refresh};
 use interface::web::routes::sign_up::signup;
-use interface::web::routes::integration::telegram::link_telegram;
+use interface::web::routes::integration::{
+    telegram::link_telegram,
+    auth::auth_telegram
+};
 use interface::web::state::AppState;
 use std::sync::Arc;
 
@@ -86,6 +92,13 @@ async fn main() -> std::io::Result<()> {
         &jwtprovider_factory
     );
 
+    let auth_telegram_use_case = AuthTelegramUseCase::new(
+        credentials.clone(),
+        &user_provider_factory,
+        &verifies_provider_factory,
+        &jwtprovider_factory
+    );
+
 
     let app_state = AppState{
         login_with_email_passwd_use_case: Arc::new(login_with_email_passwd_use_case),
@@ -93,7 +106,8 @@ async fn main() -> std::io::Result<()> {
         login_with_api_key_use_case: Arc::new(login_with_api_key_use_case),
         create_api_key_use_case: Arc::new(create_api_key_use_case),
         sign_up_with_email_use_case: Arc::new(sign_up_with_email_use_case),
-        link_telegram_account_use_case: Arc::new(link_telegram_account_use_case)
+        link_telegram_account_use_case: Arc::new(link_telegram_account_use_case),
+        auth_telegram_use_case: Arc::new(auth_telegram_use_case)
     };
 
     let host: String = credentials.host().clone();
@@ -107,12 +121,12 @@ async fn main() -> std::io::Result<()> {
                     .service(login)
                     .service(loginapikey)
                     .service(refresh)
-                    .service(link_telegram)
                     .service(signup)
                     .service(signup)
                     .service(
                         web::scope("/integration")
                             .service(link_telegram)
+                            .service(auth_telegram)
                     )
             )
             

@@ -28,7 +28,7 @@ use super::add_cred::AddTelegramCredUseCase;
 use super::constants::{AUTH_TYPE, TELEGRAM_USERNAME, TELEGRAM_LAST_NAME, TELEGRAM_FIRST_NAME};
 
 
-pub struct LinkTelegramAccountUseCase<CUS, QUS, V, CP, TP> {
+pub struct AuthTelegramUseCase<CUS, QUS, V, CP, TP> {
     credentials: Credentials,
     command_user_service: CUS,
     query_user_service: QUS,
@@ -38,9 +38,9 @@ pub struct LinkTelegramAccountUseCase<CUS, QUS, V, CP, TP> {
     add_telegram_cred_use_case: AddTelegramCredUseCase<CUS>,
 }
 
-impl<CUS, QUS, V, CP, TP> ServiceErrorExt for LinkTelegramAccountUseCase<CUS, QUS, V, CP, TP> {}
+impl<CUS, QUS, V, CP, TP> ServiceErrorExt for AuthTelegramUseCase<CUS, QUS, V, CP, TP> {}
 
-impl <CUS, QUS, V, CP, TP> LinkTelegramAccountUseCase<CUS, QUS, V, CP, TP>
+impl <CUS, QUS, V, CP, TP> AuthTelegramUseCase<CUS, QUS, V, CP, TP>
 where
     CUS: CommandUserService,
     QUS: QueryUserService,
@@ -76,25 +76,20 @@ where
         }
     }
 
-    pub async fn execute(&self, dto: TelegramDataDTO, token: String) -> Result<JwtResponseDto, String> {
-        let user_by_token = self.get_user_by_jwt(token).await
-            .map_err(|_| "Ошибка получения пользователя")?;
-        
+    pub async fn execute(&self, dto: TelegramDataDTO) -> Result<JwtResponseDto, String> {
         let extended_auth_method = match self.query_user_service.get_user_by_identifier(&dto.id.to_string(), AUTH_TYPE).await {
-            Ok(Some(user)) => {
-                if !user.user().eq(&user_by_token) {
-                    return self.handler_error(LinkAccountError::NotVerified);
-                }
-                user
-            },
+            Ok(Some(user)) => user,
             Ok(None) => {
-                let extended_auth_method = match self.add_telegram_cred_use_case.execute(user_by_token.clone(), dto.clone()).await {
+                let user = match self.command_user_service.add_user().await{
+                    Ok(v) => v,
+                    Err(e) => return self.handler_error(e)
+                };
+                let extended_auth_method = match self.add_telegram_cred_use_case.execute(user, dto.clone()).await {
                     Ok(v) => v,
                     Err(e) => return self.handler_error(e)
                 };
                 extended_auth_method
-                
-            }
+            },
             Err(e) => return self.handler_error(e)
         };
 
