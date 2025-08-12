@@ -12,6 +12,7 @@ use crate::domain::jwt::factories::JWTProviderFactory;
 
 use crate::domain::settings::model::Credentials;
 
+use crate::domain::user::models::base::UserRole;
 use crate::domain::user::models::extended::ExtendedUser;
 use crate::domain::user::service::{QueryUserService, CommandUserService};
 use crate::domain::user::factories::UserProviderFactory;
@@ -84,7 +85,19 @@ where
                     Ok(v) => v,
                     Err(e) => return self.handler_error(e)
                 };
-                let extended_auth_method = match self.add_telegram_cred_use_case.execute(user, dto.clone()).await {
+                let user_role = UserRole::new(
+                    true,
+                    self.credentials.new_user_role().with_email().clone(),
+                    user.id().clone(),
+                );
+
+                if let Err(e) = self.command_user_service.add_role(user_role).await{
+                    return self.handler_error(e);
+                }
+
+                let extended_user = ExtendedUser::new(user.id().clone(), user.created_at().clone(), user.updated_at().clone());
+
+                let extended_auth_method = match self.add_telegram_cred_use_case.execute(extended_user, dto.clone()).await {
                     Ok(v) => v,
                     Err(e) => return self.handler_error(e)
                 };

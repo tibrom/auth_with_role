@@ -88,16 +88,6 @@ where
         if let Err(e) = self.command_user_service.add_user_attribute(user_attributes).await {
             return Err(TelegramIntError::from(AddCredError::FailedAddingUserAttribute(e.to_string())));
         };
-
-        let user_role = UserRole::new(
-            true,
-            self.credentials.new_user_role().with_email().clone(),
-            user_id.clone(),
-        );
-
-        if let Err(e) = self.command_user_service.add_role(user_role).await{
-            return Err(TelegramIntError::from(AddCredError::FailedAddingUserRole(e.to_string())));
-        }
         
         Ok(ExtendedAuthMethod::new(auth_method, user))
     }

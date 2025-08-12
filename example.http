@@ -1,9 +1,9 @@
 ###
-POST http://extrabot.ru/auth/login HTTP/1.1
+POST https://extrabot.ru/auth/login HTTP/1.1
 content-type: application/json
 
 {
-    "email": "gorlans3@mail.ru",
+    "email": "gorlans@mail.ru",
     "password": "12345678"
 }
 ###
