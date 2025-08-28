@@ -14,9 +14,12 @@ use crate::application::usecase::{
         api_key::CreateApiKeyUseCase,
         email_passwd::SignUpWithEmailUseCase
     },
-    integration::telegram::{
-        link_account::LinkTelegramAccountUseCase,
-        auth::AuthTelegramUseCase,
+    integration::{
+        telegram::{
+            link_account::LinkTelegramAccountUseCase,
+            auth::AuthTelegramUseCase,
+        },
+        check_token::user::CheckTokenUseCase,
     }
 };
 
@@ -99,6 +102,12 @@ async fn main() -> std::io::Result<()> {
         &jwtprovider_factory
     );
 
+    let check_token_use_case = CheckTokenUseCase::new(
+        credentials.clone(),
+        &user_provider_factory,
+        &verifies_provider_factory,
+        &jwtprovider_factory
+    );
 
     let app_state = AppState{
         login_with_email_passwd_use_case: Arc::new(login_with_email_passwd_use_case),
@@ -107,7 +116,8 @@ async fn main() -> std::io::Result<()> {
         create_api_key_use_case: Arc::new(create_api_key_use_case),
         sign_up_with_email_use_case: Arc::new(sign_up_with_email_use_case),
         link_telegram_account_use_case: Arc::new(link_telegram_account_use_case),
-        auth_telegram_use_case: Arc::new(auth_telegram_use_case)
+        auth_telegram_use_case: Arc::new(auth_telegram_use_case),
+        check_token_use_case: Arc::new(check_token_use_case)
     };
 
     let host: String = credentials.host().clone();

@@ -8,9 +8,12 @@ use crate::application::usecase::{
         api_key::CreateApiKeyUseCase,
         email_passwd::SignUpWithEmailUseCase
     },
-    integration::telegram::{
-        link_account::LinkTelegramAccountUseCase,
-        auth::AuthTelegramUseCase
+    integration::{
+        telegram::{
+            link_account::LinkTelegramAccountUseCase,
+            auth::AuthTelegramUseCase
+        },
+        check_token::user::CheckTokenUseCase
     }
 
 };
@@ -50,6 +53,9 @@ type LinkTelegramAccountUseCaseConcrete = LinkTelegramAccountUseCase<UserCommand
 
 type AuthTelegramUseCaseConcrete = AuthTelegramUseCase<UserCommand<HttpClient>, UserQuery<HttpClient>, TelegramVerifier, ClaimsProvider, TokenProvider>;
 
+type CheckTokenUseCaseConcrete = CheckTokenUseCase<UserQuery<HttpClient>,TokenProvider, ApiKeyVerifier>;
+
+
 
 #[derive(Clone)]
 pub struct AppState {
@@ -59,6 +65,7 @@ pub struct AppState {
     pub create_api_key_use_case: Arc<CreateApiKeyUseCaseConcrete>,
     pub sign_up_with_email_use_case: Arc<SignUpWithEmailUseCaseConcrete>,
     pub link_telegram_account_use_case: Arc<LinkTelegramAccountUseCaseConcrete>,
-    pub auth_telegram_use_case: Arc<AuthTelegramUseCaseConcrete>
+    pub auth_telegram_use_case: Arc<AuthTelegramUseCaseConcrete>,
+    pub check_token_use_case: Arc<CheckTokenUseCaseConcrete>
 }
 
