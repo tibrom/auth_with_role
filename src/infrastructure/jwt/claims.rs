@@ -34,7 +34,7 @@ impl JwtClaimsService for ClaimsProvider {
             .map(|v| v.role().clone())
             .collect::<Vec<_>>();
 
-        let x_hasura_user_id = user.id().to_string();
+        let x_hasura_user_id = user.user_id().to_string();
 
         let hasura_claims = HasuraClaims::new(
             x_hasura_default_role,

@@ -37,7 +37,8 @@ use interface::web::routes::auth::{login, loginapikey, refresh};
 use interface::web::routes::sign_up::signup;
 use interface::web::routes::integration::{
     telegram::link_telegram,
-    auth::auth_telegram
+    auth::auth_telegram,
+    check_tocken::check_token
 };
 use interface::web::state::AppState;
 use std::sync::Arc;
@@ -132,11 +133,12 @@ async fn main() -> std::io::Result<()> {
                     .service(loginapikey)
                     .service(refresh)
                     .service(signup)
-                    .service(signup)
+                    .service(createapikey)
                     .service(
                         web::scope("/integration")
                             .service(link_telegram)
                             .service(auth_telegram)
+                            .service(check_token)
                     )
             )
             

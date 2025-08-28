@@ -4,7 +4,7 @@ use actix_web::{post, web, HttpRequest, HttpResponse, Responder};
 use serde::Deserialize;
 
 
-#[post("/validator/check")]
+#[post("/checkjwt")]
 pub async fn check_token(
     req: HttpRequest,
     data: web::Data<AppState>,
@@ -13,7 +13,7 @@ pub async fn check_token(
     let dto = payload.into_inner();
     let api_key = match req.headers().get("Authorization") {
         Some(header_value) => match header_value.to_str() {
-            Ok(s) => s.trim_start_matches("Api_key ").to_string(),
+            Ok(s) => s.to_string(),
             Err(_) => return HttpResponse::BadRequest().json(serde_json::json!({
                 "error": "Invalid Authorization header"
             })),

@@ -1,9 +1,9 @@
-use crate::domain::user::models::extended::ExtendedUser;
+use crate::domain::user::models::base::User;
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 #[serde(tag = "status", rename_all = "lowercase")] // JSON: "success", "error"
 pub enum CheckTokenResponseDto {
-    Success { user: ExtendedUser },
+    Success { user: User },
     NotValidToken,
     Error { err_msg: String },
 }
