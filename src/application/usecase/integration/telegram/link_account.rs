@@ -88,7 +88,7 @@ where
                 user
             },
             Ok(None) => {
-                let extended_auth_method = match self.add_telegram_cred_use_case.execute(user_by_token.clone(), dto.clone()).await {
+                let extended_auth_method = match self.add_telegram_cred_use_case.execute(user_by_token.clone().into(), dto.clone()).await {
                     Ok(v) => v,
                     Err(e) => return self.handler_error(e)
                 };

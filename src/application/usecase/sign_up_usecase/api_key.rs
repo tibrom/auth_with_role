@@ -10,7 +10,9 @@ use crate::domain::verifies::factories::VerifiesProviderFactory;
 
 use super::error::UserAttributeError;
 
+const SEARCH_AUTH_TYPE: &str = "email";
 const AUTH_TYPE: &str = "apikey";
+
 
 const WRONG_CREDENTIALS: &str = "Incorrect login or password";
 
@@ -53,7 +55,7 @@ where
         &self,
         sing_up_user: CreateApiKeyRequestDto
     ) -> Result<CreateApiKeyResponseDto, String> {
-        let user = match self.query_user_service.get_user_by_identifier(&sing_up_user.email, AUTH_TYPE).await {
+        let user = match self.query_user_service.get_user_by_identifier(&sing_up_user.email, SEARCH_AUTH_TYPE).await {
             Ok(Some(user)) => user,
             Ok(None) => return self.handler_error(UserAttributeError::UserNotFound(sing_up_user.email)),
             Err(e) => return self.handler_error(e),

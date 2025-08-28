@@ -36,6 +36,7 @@ impl <T: HttpClientInterface + Clone> CommandUserService for UserCommand <T> {
 
         let descriptor = CheckAuthMethodRequestDescriptor::new(identifier, auth_type.to_owned());
 
+        
         let result = client
             .execute::<CheckAuthMethodRequestDescriptor, CheckAuthMethodResponse>(&descriptor)
             .await

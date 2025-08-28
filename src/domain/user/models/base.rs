@@ -2,6 +2,8 @@ use chrono::{DateTime, FixedOffset};
 use getset::{Getters, Setters};
 use uuid::Uuid;
 
+use super::extended::ExtendedUser;
+
 #[derive(Getters, Setters, Debug, Clone, serde::Deserialize, serde::Serialize, PartialEq)]
 pub struct User {
     #[get = "pub"]
@@ -15,6 +17,12 @@ pub struct User {
 impl User {
     pub fn new(id: Uuid, created_at: DateTime<FixedOffset>, updated_at: Option<DateTime<FixedOffset>> ) -> Self {
         Self { id, created_at, updated_at }
+    }
+}
+
+impl From<ExtendedUser> for User {
+    fn from(value: ExtendedUser) -> Self {
+        Self { id: value.id().clone(), created_at: value.created_at().clone(), updated_at: value.updated_at().clone() }
     }
 }
 

@@ -1,5 +1,5 @@
-query CheckAuthMethodExists($identifier: String!) {
-  users_auth_method_aggregate(where: {identifier: {_eq: $identifier}}) {
+query CheckAuthMethodExists($identifier: String, $auth_type: String) {
+  users_auth_method_aggregate(where: {_and: {identifier: {_eq: $identifier}, auth_type: {_eq: $auth_type}}}) {
     aggregate {
       count
     }

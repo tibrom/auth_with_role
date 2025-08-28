@@ -67,6 +67,7 @@ pub struct ExtendedUser {
     id: Uuid,
     #[get = "pub"]
     created_at: DateTime<FixedOffset>,
+    #[get = "pub"]
     updated_at: Option<DateTime<FixedOffset>>,
     #[get = "pub"]
     user_roles: Vec<UserRole>,
@@ -75,15 +76,13 @@ pub struct ExtendedUser {
 }
 
 
-impl Into<User> for ExtendedUser {
-    fn into(self) -> User {
-        User::new(self.id.clone(), self.created_at.clone(), self.updated_at.clone())
-    }
-}
-
 impl ExtendedUser {
     pub fn new(id: Uuid, created_at: DateTime<FixedOffset>, updated_at: Option<DateTime<FixedOffset>>) -> Self {
         Self { id, created_at, updated_at, user_roles: Vec::new(), user_attributes: Vec::new() }
+    }
+
+    pub fn as_base(&self) -> User {
+        User::new(self.id.clone(), self.created_at.clone(), self.updated_at.clone())
     }
 
     pub fn add_role(&mut self, role: UserRole) {

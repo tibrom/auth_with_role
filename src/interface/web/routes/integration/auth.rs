@@ -12,7 +12,7 @@ pub async fn auth_telegram(
     let dto = payload.into_inner();
 
     let result = data
-        .auth_telegram_use_case_concrete
+        .auth_telegram_use_case
         .execute(dto)
         .await;
 

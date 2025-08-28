@@ -5,7 +5,7 @@ use crate::domain::{
     user::{
         factories::UserProviderFactory,
         models::{
-            base::{AuthMethod, UserAttribute, UserRole},
+            base::{AuthMethod, UserAttribute, UserRole, User},
             extended::{
                 ExtendedUser,
                 ExtendedAuthMethod
@@ -32,7 +32,7 @@ where
         Self {credentials, command_user_service}
     }
 
-    pub async fn execute(&self, user: ExtendedUser, dto: TelegramDataDTO) -> Result<ExtendedAuthMethod, TelegramIntError> {
+    pub async fn execute(&self, user: User, dto: TelegramDataDTO) -> Result<ExtendedAuthMethod, TelegramIntError> {
         let user_id = user.id();
 
         let auth_method_by_id = AuthMethod::new(
@@ -95,10 +95,14 @@ where
             user_id.clone(),
         );
 
-        if let Err(e) = self.command_user_service.add_role(user_role).await{
+        if let Err(e) = self.command_user_service.add_role(user_role.clone()).await{
             return Err(TelegramIntError::from(AddCredError::FailedAddingUserRole(e.to_string())));
         }
         
-        Ok(ExtendedAuthMethod::new(auth_method, user))
+        let mut extended = ExtendedUser::new(user.id().clone(), user.created_at().clone(), user.updated_at().clone());
+
+        extended.add_role(user_role);
+
+        Ok(ExtendedAuthMethod::new(auth_method, extended))
     }
 }
