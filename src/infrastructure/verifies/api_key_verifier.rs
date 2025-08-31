@@ -113,7 +113,6 @@ mod tests {
         let api_key = "invalidformat";
 
         let result = verifier.extract_identifier(api_key);
-        println!("result {:?}", result);
         assert!(result.is_err());
     }
 
@@ -146,7 +145,6 @@ mod tests {
         let verifier = ApiKeyVerifier::new(credentials.clone());
 
         let api_key = verifier.generate();
-        println!("Generated API key: {}", api_key);
 
         let parts: Vec<&str> = api_key.split('-').collect();
         assert_eq!(parts.len(), 2, "API key should have 2 parts separated by '-'");

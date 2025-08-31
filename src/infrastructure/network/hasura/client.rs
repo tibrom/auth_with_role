@@ -11,7 +11,7 @@ use serde_json::{value, Value};
 /// Клиент для взаимодействия с Hasura GraphQL API.
 #[derive(Clone, Debug)]
 pub struct HasuraClient<T: HttpClientInterface> {
-    http: Box<T>,
+    pub http: Box<T>,
     pub query_hash: HashMap<String, String>,
 }
 
@@ -23,6 +23,8 @@ impl<T: HttpClientInterface + Clone> HasuraClient<T> {
             query_hash: HashMap::new(),
         }
     }
+
+
 
     fn get_hash_key(&self, filename: &str, dir: &Dir<'static>) -> String {
         if let Some(s) = dir.path().to_str() {
@@ -50,7 +52,7 @@ impl<T: HttpClientInterface + Clone> HasuraClient<T> {
         dir: Dir<'static>,
     ) -> Result<String, HasuraClientError> {
         let key = self.get_hash_key(filename, &dir);
-        println!("key {:?}", key);
+
         if let Some(query) = self.query_hash.get(&key) {
             return Ok(query.clone());
         };
@@ -222,7 +224,6 @@ mod tests {
         let query = recorder.read_data().await.unwrap();
 
         assert_eq!(query, assert_query);
-        println!("result  query {:?}", query);
         assert!(r.is_ok());
     }
 

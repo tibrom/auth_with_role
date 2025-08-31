@@ -44,6 +44,15 @@ impl HttpClient {
         self
     }
 
+    pub fn get_header(&self, key: &str) -> Option<String> {
+        for (k, v) in &self.headers {
+            if k == key {
+                return Some(v.clone());
+            }
+        }
+        None
+    }
+
     async fn request_inner(
         &self,
         method: Method,

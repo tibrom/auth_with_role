@@ -60,7 +60,6 @@ where
             Err(e) => return self.handler_error(e)
         };
 
-        println!("identifier {}", identifier);
         let user = match self
             .query_user_service
             .get_user_by_identifier(&identifier, AUTH_TYPE)

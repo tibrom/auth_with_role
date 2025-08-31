@@ -24,7 +24,6 @@ impl ObjectGQLDescriptor for AddAuthMethodDescriptor {
 
             }
         );
-        println!("r {}", r);
         r
     }
 }

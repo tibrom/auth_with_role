@@ -59,19 +59,15 @@ where
         &self,
         dto: LoginEmailPasRequestDto,
     ) -> Result<JwtResponseDto, String> {
-        println!("1");
         let user = match self.user_provider.get_user_by_identifier(&dto.email, AUTH_TYPE).await {
             Ok(Some(user)) => user,
             Ok(None) => return self.handler_error(AuthenticatorError::UserNotFound(dto.email)),
             Err(e) => return self.handler_error(e)
         };
-        println!("2");
 
         let Some(password_hash) = user.secret() else {
-            println!("Пароль не найден");
             return self.handler_error(AuthenticatorError::EmailPasswdAuthNotAllowed(dto.email));
         };
-        println!("3");
 
         match self
             .password_verifier
@@ -163,8 +159,6 @@ mod tests {
         );
 
         let result = action.execute(login_email_pas_request_dto()).await;
-
-        println!("result {:?}", result);
         
         assert!(result.is_ok());
 
@@ -201,8 +195,6 @@ mod tests {
         );
 
         let result =action.execute(login_data).await;
-
-        println!("result {:?}", result);
         
         assert!(result.is_ok());
 
@@ -237,8 +229,6 @@ mod tests {
         );
 
         let result = action.execute(login_email_pas_request_dto()).await;
-
-        println!("result {:?}", result);
         
         assert!(result.is_err());
     }

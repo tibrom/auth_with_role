@@ -53,13 +53,11 @@ where
             Ok(v) => v,
             Err(e) => return self.handler_error(e)
         };
-        println!("password_hash {}", password_hash);
 
         let is_free_email = match self.command_user_service.auth_identifier_is_free(user.email.clone(), AUTH_TYPE).await {
             Ok(v) => v,
             Err(e) => return self.handler_error(e)
         };
-        println!("is_free_email {}", is_free_email);
 
         if !is_free_email {
             return self.handler_error(UserAttributeError::EmailIsBusy);

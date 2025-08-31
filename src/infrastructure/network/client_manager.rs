@@ -39,12 +39,22 @@ impl HasuraClientManager {
     pub async fn get_hasura_client(
         credentials: &Credentials,
     ) -> Result<HasuraClient<HttpClient>, HasuraClientError> {
-        if let Some(cached) = Self::try_get_cached_hasura_client().await {
-            return Ok(cached);
-        }
 
-        let client = Self::create_and_cache_hasura_client(credentials).await?;
-        Ok(client)
+        let Some(cached) = Self::try_get_cached_hasura_client().await else {
+            let client = Self::create_and_cache_hasura_client(credentials).await?;
+            return Ok(client)
+        };
+        let Some(token) = cached.http.get_header("Authorization").and_then(|t| t.strip_prefix("Bearer ").map(|s| s.to_string())) else {
+            let client = Self::create_and_cache_hasura_client(credentials).await?;
+            return Ok(client)
+        };
+
+        if !Self::check_jwt_token(credentials, &token) {
+            let client = Self::create_and_cache_hasura_client(credentials).await?;
+            return Ok(client)
+        }
+        return Ok(cached);
+        
     }
 
     async fn try_get_cached_hasura_client() -> Option<HasuraClient<HttpClient>> {
@@ -75,6 +85,11 @@ impl HasuraClientManager {
             .token_service()
             .generate_access(claims)
             .map_err(|_| HasuraClientError::CredentialsError)
+    }
+
+    fn check_jwt_token(credentials: &Credentials, token: &str) -> bool {
+        let factory = JWTProvider::new(credentials.clone());
+        factory.token_service().validate_access(token).is_ok()
     }
 }
 
