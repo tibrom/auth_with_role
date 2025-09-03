@@ -133,14 +133,24 @@ where
             Err(e) => return self.handler_error(e),
         };
 
+        let refresh_claims = match self.claims_provider.refresh_claims(&extended_auth_method) {
+            Ok(v) => v,
+            Err(e) => return self.handler_error(e),
+        };
+
         let access_token = match self.token_provider.generate_access(claims) {
+            Ok(v) => v,
+            Err(e) => return self.handler_error(e),
+        };
+
+        let refresh_token = match self.token_provider.generate_refresh(refresh_claims) {
             Ok(v) => v,
             Err(e) => return self.handler_error(e),
         };
 
         let token_pair = TokenPairDto {
             access_token,
-            refresh_token: None, // Telegram integration may not require refresh tokens
+            refresh_token: Some(refresh_token), // Telegram integration may not require refresh tokens
         };
 
         Ok(JwtResponseDto::Success { auth_data: token_pair })
