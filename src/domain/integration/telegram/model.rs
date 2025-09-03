@@ -8,3 +8,11 @@ pub struct TelegramData {
     pub auth_date: i64,
     pub hash: String,
 }
+
+#[derive(Debug, serde::Deserialize)]
+struct TelegramUser {
+    id: i64,
+    first_name: String,
+    username: Option<String>,
+}
+

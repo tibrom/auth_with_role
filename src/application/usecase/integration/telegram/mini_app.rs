@@ -3,6 +3,7 @@ use uuid::Uuid;
 
 use crate::application::error_ext::ServiceErrorExt;
 use crate::application::usecase::auth_usecase::dto::{JwtResponseDto, TokenPairDto};
+use crate::application::usecase::integration::telegram::dto::{TelegramCredentials, TelegramDataDTO};
 use crate::application::usecase::integration::telegram::errors::LinkAccountError;
 
 use crate::domain::errors::service::{AppErrorInfo, ErrorLevel};
@@ -16,21 +17,20 @@ use crate::domain::user::models::extended::ExtendedUser;
 use crate::domain::user::service::{QueryUserService, CommandUserService};
 use crate::domain::user::factories::UserProviderFactory;
 
-
 use crate::domain::integration::telegram::model::TelegramData;
 use crate::domain::integration::telegram::verifier::TelegramVerifierService;
-
+use crate::domain::integration::telegram::service::{FactoryTelegramInitDataParser, ParserInitDataService};
 use crate::domain::verifies::factories::VerifiesProviderFactory;
 
 
 
-use super::dto::{TelegramDataDTO, TelegramCredentials};
+use super::dto::InitDataDTO;
 use super::add_cred::AddTelegramCredUseCase;
 
 use super::constants::{AUTH_TYPE, TELEGRAM_USERNAME, TELEGRAM_LAST_NAME, TELEGRAM_FIRST_NAME};
 
 
-pub struct AuthTelegramUseCase<CUS, QUS, V, CP, TP> {
+pub struct AuthTelegramMiniAppUseCase<CUS, QUS, V, CP, TP, PD> {
     credentials: Credentials,
     command_user_service: CUS,
     query_user_service: QUS,
@@ -38,25 +38,29 @@ pub struct AuthTelegramUseCase<CUS, QUS, V, CP, TP> {
     claims_provider: CP,
     token_provider: TP,
     add_telegram_cred_use_case: AddTelegramCredUseCase<CUS>,
+    parser_init_data_dto: PD,
 }
 
-impl<CUS, QUS, V, CP, TP> ServiceErrorExt for AuthTelegramUseCase<CUS, QUS, V, CP, TP> {}
+impl<CUS, QUS, V, CP, TP, PD> ServiceErrorExt for AuthTelegramMiniAppUseCase<CUS, QUS, V, CP, TP, PD> {}
 
-impl <CUS, QUS, V, CP, TP> AuthTelegramUseCase<CUS, QUS, V, CP, TP>
+impl <CUS, QUS, V, CP, TP, PD> AuthTelegramMiniAppUseCase<CUS, QUS, V, CP, TP, PD>
 where
     CUS: CommandUserService,
     QUS: QueryUserService,
     V: TelegramVerifierService,
     CP: JwtClaimsService,
     TP: TokenService,
+    PD: FactoryTelegramInitDataParser
 {
     pub fn new<T, P, U>(
         credentials: Credentials,
+        parser_init_data_dto: PD,
         user_provider_factory: &U,
         verifies_provider_factory: &P,
         jwtprovider_factory: &T,
     ) -> Self
     where
+        PD: FactoryTelegramInitDataParser,
         T: JWTProviderFactory<Claims = CP, Tokens = TP>,
         P: VerifiesProviderFactory<TelegramVerifierService = V>,
         U: UserProviderFactory<QueryUser = QUS, CommandUser = CUS>,
@@ -74,20 +78,36 @@ where
             telegram_verifier,
             claims_provider,
             token_provider,
-            add_telegram_cred_use_case
+            add_telegram_cred_use_case,
+            parser_init_data_dto
         }
     }
 
-    pub async fn execute(&self, dto: TelegramDataDTO) -> Result<JwtResponseDto, String> {
-        let extended_auth_method = match self.query_user_service.get_user_by_identifier(&dto.id.to_string(), AUTH_TYPE).await {
+    pub async fn execute(&self, dto: InitDataDTO) -> Result<JwtResponseDto, String> {
+
+        let parser = self.parser_init_data_dto.create(dto.init_data.clone());
+
+        let telegram_id = match parser.get_tg_id() {
+            Some(v) => v,
+            None => return Err(String::from("Ошибка парсинга init_data"))
+        };
+        
+
+        let extended_auth_method = match self.query_user_service.get_user_by_identifier(&telegram_id.to_string(), AUTH_TYPE).await {
             Ok(Some(user)) => user,
             Ok(None) => {
                 let user = match self.command_user_service.add_user().await{
                     Ok(v) => v,
                     Err(e) => return self.handler_error(e)
                 };
+                
+                let telegram_credentials = TelegramCredentials::new(
+                    telegram_id.to_string(),
+                    parser.get_tg_username().unwrap_or("N/A".to_string()),
+                    parser.first_name(),
+                    parser.last_name()
+                );
 
-                let telegram_credentials = TelegramCredentials::from(dto.clone());
                 let extended_auth_method = match self.add_telegram_cred_use_case.execute(user, telegram_credentials).await {
                     Ok(v) => v,
                     Err(e) => return self.handler_error(e)
@@ -97,9 +117,8 @@ where
             Err(e) => return self.handler_error(e)
         };
 
-        let telegram_data: TelegramData = dto.into();
 
-        let is_verified = match self.telegram_verifier.is_verified_telegram_data(telegram_data.clone()) {
+        let is_verified = match self.telegram_verifier.is_verified_mini_app_data(&dto.init_data) {
             Ok(v) => v,
             Err(e) => return self.handler_error(e)
         };

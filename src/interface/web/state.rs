@@ -1,19 +1,13 @@
 use crate::application::usecase::{
     auth_usecase::{
-        refresh::RefreshTokenUseCase,
-        email_passwd::LoginWithEmailPasswdUseCase,
-        api_key::LoginWithApiKeyUseCase
-    },
-    sign_up_usecase::{
+        api_key::LoginWithApiKeyUseCase, email_passwd::LoginWithEmailPasswdUseCase, refresh::RefreshTokenUseCase
+    }, integration::{
+        check_token::user::CheckTokenUseCase, telegram::{
+            auth::AuthTelegramUseCase, link_account::LinkTelegramAccountUseCase, mini_app::AuthTelegramMiniAppUseCase
+        }
+    }, sign_up_usecase::{
         api_key::CreateApiKeyUseCase,
         email_passwd::SignUpWithEmailUseCase
-    },
-    integration::{
-        telegram::{
-            link_account::LinkTelegramAccountUseCase,
-            auth::AuthTelegramUseCase
-        },
-        check_token::user::CheckTokenUseCase
     }
 
 };
@@ -24,6 +18,7 @@ use crate::infrastructure::verifies::api_key_verifier::ApiKeyVerifier;
 use crate::infrastructure::verifies::telegram_verifier::TelegramVerifier;
 use crate::infrastructure::jwt::claims::ClaimsProvider;
 use crate::infrastructure::jwt::token::TokenProvider;
+use crate::infrastructure::services::telegram::FactoryParsedInitDataParser;
 
 use crate::infrastructure::network::http::client::HttpClient;
 
@@ -55,6 +50,9 @@ type AuthTelegramUseCaseConcrete = AuthTelegramUseCase<UserCommand<HttpClient>, 
 
 type CheckTokenUseCaseConcrete = CheckTokenUseCase<UserQuery<HttpClient>,TokenProvider, ApiKeyVerifier>;
 
+type AuthTelegramMiniAppUseCaseConcrete = AuthTelegramMiniAppUseCase<UserCommand<HttpClient>, UserQuery<HttpClient>, TelegramVerifier, ClaimsProvider, TokenProvider, FactoryParsedInitDataParser>;
+
+
 
 
 #[derive(Clone)]
@@ -66,6 +64,7 @@ pub struct AppState {
     pub sign_up_with_email_use_case: Arc<SignUpWithEmailUseCaseConcrete>,
     pub link_telegram_account_use_case: Arc<LinkTelegramAccountUseCaseConcrete>,
     pub auth_telegram_use_case: Arc<AuthTelegramUseCaseConcrete>,
-    pub check_token_use_case: Arc<CheckTokenUseCaseConcrete>
+    pub check_token_use_case: Arc<CheckTokenUseCaseConcrete>,
+    pub auth_telegram_mini_app_use_case: Arc<AuthTelegramMiniAppUseCaseConcrete>,
 }
 

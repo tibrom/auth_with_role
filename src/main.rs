@@ -18,6 +18,7 @@ use crate::application::usecase::{
         telegram::{
             link_account::LinkTelegramAccountUseCase,
             auth::AuthTelegramUseCase,
+            mini_app::AuthTelegramMiniAppUseCase,
         },
         check_token::user::CheckTokenUseCase,
     }
@@ -30,14 +31,18 @@ use crate::infrastructure::jwt::factory::JWTProvider;
 use crate::infrastructure::user::factory::UserProvider;
 use crate::infrastructure::verifies::factory::VerifiesProvider;
 use crate::infrastructure::network::client_manager::HasuraClientManager;
+use crate::infrastructure::services::telegram::FactoryParsedInitDataParser;
 
 use actix_web::{web, App, HttpServer};
 use interface::web::routes::auth::createapikey;
 use interface::web::routes::auth::{login, loginapikey, refresh};
 use interface::web::routes::sign_up::signup;
 use interface::web::routes::integration::{
-    telegram::link_telegram,
-    auth::auth_telegram,
+    telegram::{
+        link_telegram,
+        auth_telegram,
+        telegram_miniapp
+    },
     check_tocken::check_token
 };
 use interface::web::state::AppState;
@@ -110,6 +115,14 @@ async fn main() -> std::io::Result<()> {
         &jwtprovider_factory
     );
 
+    let auth_telegram_mini_app_use_case = AuthTelegramMiniAppUseCase::new(
+        credentials.clone(), 
+        FactoryParsedInitDataParser,
+        &user_provider_factory,
+        &verifies_provider_factory,
+        &jwtprovider_factory
+    );
+
     let app_state = AppState{
         login_with_email_passwd_use_case: Arc::new(login_with_email_passwd_use_case),
         refresh_token_use_case: Arc::new(refresh_token_use_case),
@@ -118,7 +131,8 @@ async fn main() -> std::io::Result<()> {
         sign_up_with_email_use_case: Arc::new(sign_up_with_email_use_case),
         link_telegram_account_use_case: Arc::new(link_telegram_account_use_case),
         auth_telegram_use_case: Arc::new(auth_telegram_use_case),
-        check_token_use_case: Arc::new(check_token_use_case)
+        check_token_use_case: Arc::new(check_token_use_case),
+        auth_telegram_mini_app_use_case: Arc::new(auth_telegram_mini_app_use_case),
     };
 
     let host: String = credentials.host().clone();
@@ -139,6 +153,7 @@ async fn main() -> std::io::Result<()> {
                             .service(link_telegram)
                             .service(auth_telegram)
                             .service(check_token)
+                            .service(telegram_miniapp)
                     )
             )
             

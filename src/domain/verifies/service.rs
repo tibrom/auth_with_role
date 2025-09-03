@@ -1,5 +1,4 @@
 use crate::domain::errors::service::AppErrorInfo;
-use super::model::TelegramData;
 use std::fmt::Display;
 
 pub trait PasswordVerifierService {
@@ -17,7 +16,3 @@ pub trait ApiKeyVerifierService {
 }
 
 
-pub trait TelegramVerifierService {
-    type Error: AppErrorInfo;
-    fn is_verified(&self, telegram_data: TelegramData) -> Result<bool, Self::Error>;
-}

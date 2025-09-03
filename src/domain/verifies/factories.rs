@@ -1,4 +1,5 @@
-use super::service::{ApiKeyVerifierService, PasswordVerifierService, TelegramVerifierService};
+use super::service::{ApiKeyVerifierService, PasswordVerifierService};
+use super::super::integration::telegram::verifier::TelegramVerifierService;
 
 pub trait VerifiesProviderFactory {
     type PasswordVerifier: PasswordVerifierService + Send;

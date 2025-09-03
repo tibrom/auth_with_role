@@ -1,4 +1,4 @@
-use crate::domain::verifies::model::TelegramData;
+use crate::domain::integration::telegram::model::TelegramData;
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct TelegramDataDTO {
@@ -26,4 +26,27 @@ impl Into<TelegramData> for TelegramDataDTO {
     }
 }
 
+pub struct TelegramCredentials{
+    pub id: String,
+    pub username: String,
+    pub first_name: Option<String>,
+    pub last_name: Option<String>,
+}
 
+impl TelegramCredentials {
+    pub fn new( id: String, username: String, first_name: Option<String>, last_name: Option<String>,) -> Self {
+        Self { id, username, first_name, last_name}
+    }
+}
+
+impl From<TelegramDataDTO> for TelegramCredentials {
+    fn from(value: TelegramDataDTO) -> Self {
+        Self { id: value.id.to_string(), username: value.username, first_name: value.first_name, last_name: value.last_name }
+    }
+}
+
+
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+pub struct InitDataDTO {
+    pub init_data: String,
+}

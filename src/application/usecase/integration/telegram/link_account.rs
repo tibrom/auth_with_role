@@ -16,13 +16,16 @@ use crate::domain::user::models::extended::ExtendedUser;
 use crate::domain::user::service::{QueryUserService, CommandUserService};
 use crate::domain::user::factories::UserProviderFactory;
 
-use crate::domain::verifies::model::TelegramData;
-use crate::domain::verifies::service::TelegramVerifierService;
+use crate::domain::integration::telegram::model::TelegramData;
+use crate::domain::integration::telegram::verifier::TelegramVerifierService;
 use crate::domain::verifies::factories::VerifiesProviderFactory;
 
 
 
-use super::dto::TelegramDataDTO;
+use super::dto::{
+    TelegramDataDTO,
+    TelegramCredentials
+};
 use super::add_cred::AddTelegramCredUseCase;
 
 use super::constants::{AUTH_TYPE, TELEGRAM_USERNAME, TELEGRAM_LAST_NAME, TELEGRAM_FIRST_NAME};
@@ -88,7 +91,8 @@ where
                 user
             },
             Ok(None) => {
-                let extended_auth_method = match self.add_telegram_cred_use_case.execute(user_by_token.clone().into(), dto.clone()).await {
+                let telegram_credentials = TelegramCredentials::from(dto.clone());
+                let extended_auth_method = match self.add_telegram_cred_use_case.execute(user_by_token.clone().into(), telegram_credentials).await {
                     Ok(v) => v,
                     Err(e) => return self.handler_error(e)
                 };
@@ -100,7 +104,7 @@ where
 
         let telegram_data: TelegramData = dto.into();
 
-        let is_verified = match self.telegram_verifier.is_verified(telegram_data.clone()) {
+        let is_verified = match self.telegram_verifier.is_verified_telegram_data(telegram_data.clone()) {
             Ok(v) => v,
             Err(e) => return self.handler_error(e)
         };

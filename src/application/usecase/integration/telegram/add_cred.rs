@@ -1,4 +1,4 @@
-use crate::application::usecase::integration::telegram::dto::TelegramDataDTO; 
+use crate::application::usecase::integration::telegram::dto::TelegramCredentials; 
 use crate::domain::{
     jwt::factories::JWTProviderFactory,
     settings::model::Credentials,
@@ -32,7 +32,7 @@ where
         Self {credentials, command_user_service}
     }
 
-    pub async fn execute(&self, user: User, dto: TelegramDataDTO) -> Result<ExtendedAuthMethod, TelegramIntError> {
+    pub async fn execute(&self, user: User, dto: TelegramCredentials) -> Result<ExtendedAuthMethod, TelegramIntError> {
         let user_id = user.id();
 
         let auth_method_by_id = AuthMethod::new(

@@ -1,5 +1,5 @@
 ###
-POST http://127.0.0.1:8081/auth/login HTTP/1.1
+POST https://extrabot.ru/auth/login HTTP/1.1
 content-type: application/json
 
 {
@@ -63,3 +63,13 @@ Authorization: BMhe3uVyjX-HgCzC1uzIn
 {
     "token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiI4MDFiZDA0NS1hMzY3LTQ2ODMtOTIzNC0yOTM1ODAyNjRlMzkiLCJhZG1pbiI6ZmFsc2UsImV4cCI6MTc1NjQ1MDQ2NiwiaHR0cHM6Ly9oYXN1cmEuaW8vand0L2NsYWltcyI6eyJ4LWhhc3VyYS1kZWZhdWx0LXJvbGUiOiJ1c2VyIiwieC1oYXN1cmEtYWxsb3dlZC1yb2xlcyI6WyJ1c2VyIl0sIngtaGFzdXJhLXVzZXItaWQiOiI4MDFiZDA0NS1hMzY3LTQ2ODMtOTIzNC0yOTM1ODAyNjRlMzkifX0.XqEOtJrO5bRKF94WliwBomJGMTDBrv9Mdw3b5DgIxkI"
 }
+
+###
+POST http://127.0.0.1:8081/auth/integration/telegram/miniapp HTTP/1.1
+content-type: application/json
+
+{
+    "init_data": "auth_date=1660000000&user=%7B%22id%22%3A42%2C%22first_name%22%3A%22Test%22%2C%22username%22%3A%22tester%22%7D&hash=69358c7f5849c36f1df0950204916fd441b612e83dfa99558cd55b31691852c5"
+}
+
+###
