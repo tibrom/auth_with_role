@@ -76,6 +76,8 @@ impl AppErrorInfo for ApiKeyVerifierError {
 
 #[derive(Debug, Error)]
 pub enum TelegramVerifierError {
+    #[error("Encryption Error")]
+    Message(String)
 }
 
 impl AppErrorInfo for TelegramVerifierError {

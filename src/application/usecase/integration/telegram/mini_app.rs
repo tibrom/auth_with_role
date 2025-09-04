@@ -84,6 +84,7 @@ where
     }
 
     pub async fn execute(&self, dto: InitDataDTO) -> Result<JwtResponseDto, String> {
+        tracing::info!("dto: {:?}", dto);
 
         let parser = self.parser_init_data_dto.create(dto.init_data.clone());
 

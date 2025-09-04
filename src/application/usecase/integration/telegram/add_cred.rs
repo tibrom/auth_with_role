@@ -91,7 +91,7 @@ where
 
         let user_role = UserRole::new(
             true,
-            self.credentials.new_user_role().with_email().clone(),
+            self.credentials.new_user_role().with_telegram().clone(),
             user_id.clone(),
         );
 

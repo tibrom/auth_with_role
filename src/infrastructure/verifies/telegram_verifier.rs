@@ -9,6 +9,8 @@ use crate::domain::integration::telegram::model::TelegramData;
 use crate::domain::integration::telegram::verifier::TelegramVerifierService;
 use super::errors::TelegramVerifierError;
 
+type HmacSha256 = Hmac<Sha256>;
+
 pub struct TelegramVerifier{
     credentials: Credentials
 }
@@ -59,38 +61,45 @@ impl TelegramVerifierService for TelegramVerifier {
     }
 
     fn is_verified_mini_app_data(&self, init_data: &str) -> Result<bool, Self::Error> {
+        
         let bot_token = self.credentials.bot_token().clone();
-        let pairs: Vec<(String, String)> =
-            form_urlencoded::parse(init_data.as_bytes()).into_owned().collect();
+        // 1) распарсить query-строку с URL-декодом
+        let mut pairs: Vec<(String, String)> =
+            url::form_urlencoded::parse(init_data.as_bytes()).into_owned().collect();
 
-        let mut data_map = BTreeMap::new();
-        let mut received_hash = String::new();
-
-        for (k, v) in pairs {
-            if k == "hash" {
-                received_hash = v;
-            } else {
-                data_map.insert(k, v);
-            }
-        }
-
-        let data_check_string = data_map
+        // достать hash
+        let received_hash = pairs
             .iter()
-            .map(|(k, v)| format!("{}={}", k, v))
-            .collect::<Vec<String>>()
+            .find(|(k, _)| k == "hash")
+            .map(|(_, v)| v.clone())
+            .ok_or_else(|| TelegramVerifierError::Message("hash is missing in init_data".to_string()))?;
+
+        // 2) убрать hash; (signature можно оставлять/убирать — она не нужна для проверки)
+        pairs.retain(|(k, _)| k != "hash");
+
+        // 3) отсортировать по ключу
+        pairs.sort_by(|a, b| a.0.cmp(&b.0));
+
+        // 4) собрать data_check_string
+        let data_check_string = pairs
+            .iter()
+            .map(|(k, v)| format!("{k}={v}"))
+            .collect::<Vec<_>>()
             .join("\n");
 
-        tracing::info!("Data check string: {}", data_check_string);
-        // Хэшируем bot_token
-        let secret_key = Sha256::digest(bot_token.as_bytes());
+        // 5) секрет = HMAC("WebAppData", bot_token)
+        let mut mac1 = HmacSha256::new_from_slice(b"WebAppData")
+            .map_err(|_| TelegramVerifierError::Message("HMAC init failed".to_string()))?;
+        mac1.update(bot_token.as_bytes());
+        let secret = mac1.finalize().into_bytes(); // bytes, не hex!
 
-        // Подпись
-        let mut mac = Hmac::<Sha256>::new_from_slice(&secret_key).unwrap();
-        mac.update(data_check_string.as_bytes());
+        // 6) подпись = HMAC(secret, data_check_string)
+        let mut mac2 = HmacSha256::new_from_slice(&secret)
+            .map_err(|_| TelegramVerifierError::Message("HMAC init failed".to_string()))?;
+        mac2.update(data_check_string.as_bytes());
+        let calc = mac2.finalize().into_bytes();
+        let calc_hex = hex::encode(calc); // hex в нижнем регистре
 
-        let result = mac.finalize();
-        let calculated_hash = hex::encode(result.into_bytes());
-
-        Ok(calculated_hash == received_hash)
+        Ok(calc_hex.eq_ignore_ascii_case(&received_hash))
     }
 }
